@@ -18,21 +18,8 @@ type Blog struct{
 	comment []string
 }
 
-var comments = []string{
-	"a",
-	"b",
-	"c", // comma added
-}
 
-type blog_obj []Blog
-
-var blogs = blog_obj {
-	{
-		ID: 1,
-		Name: "abc",
-		comment: comments,
-	},
-}
+var blog_object = make([]Blog, 0)
 
 // NewBlog returns the blog service implementation.
 func NewBlog(logger *log.Logger) blog.Service {
@@ -48,7 +35,9 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 	obj.ID = *p.ID
 	obj.Name = *p.Name
 	obj.comment = p.Comments
-	blogs = append(blogs, obj)
+
+	blog_object = append(blog_object, obj)
+	log.Print(blog_object)
 
 	newBlog := (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
 	return newBlog, nil
@@ -59,7 +48,7 @@ func (s *blogsrvc) List(ctx context.Context) (res []*blog.Storedblog, err error)
 	s.logger.Print("blog.list")
 
 	result := []*blog.Storedblog{}
-	for _,all_blogs := range blogs{
+	for _,all_blogs := range blog_object{
 		item := blog.Storedblog{all_blogs.ID, all_blogs.Name, all_blogs.comment}
 		result= append(result, &item)
 	}
@@ -70,9 +59,9 @@ func (s *blogsrvc) List(ctx context.Context) (res []*blog.Storedblog, err error)
 func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error) {
 	s.logger.Print("blog.remove")
 
-	for i, singleBlog := range blogs {
+	for i, singleBlog := range blog_object {
 		if singleBlog.ID == p.ID {
-			blogs = append(blogs[:i], blogs[i+1:]...)
+			blog_object = append(blog_object[:i], blog_object[i+1:]...)
 			log.Print("The event with ID has been deleted successfully", singleBlog.ID)
 		}
 	}
@@ -83,11 +72,11 @@ func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error
 func (s *blogsrvc) Update(ctx context.Context, p *blog.UpdatePayload) (err error) {
 	s.logger.Print("blog.update")
 
-	for i, singleBlog := range blogs {
+	for i, singleBlog := range blog_object {
 		if singleBlog.ID == *p.ID {
 			singleBlog.Name = p.Name
 			singleBlog.comment = p.Comments
-			blogs = append(blogs[:i], singleBlog)
+			blog_object = append(blog_object[:i], singleBlog)
 		}
 	}
 	return
