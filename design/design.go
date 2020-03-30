@@ -4,10 +4,10 @@ import (
 	. "goa.design/goa/v3/dsl"
 )
 
-var _ = API("create", func() {
+var _ = API("blog", func() {
 	Title("Hello Service")
 	Description("Service to print hello")
-    Server("create", func() {
+    Server("blog", func() {
         Host("localhost", func() {
             URI("http://localhost:8000")
             URI("grpc://localhost:8080")
@@ -15,18 +15,8 @@ var _ = API("create", func() {
     })
 })
 
-var _ = Service("create", func() {
+var _ = Service("blog", func() {
 	Description("The blog service gives blog details.")
-
-	// Method("hello", func() {
-
-	// 	HTTP(func() {
-	// 		GET("/")
-	// 	})
-
-	// 	GRPC(func() {
-	// 	})
-	// })
 
 	Method("create", func() {
 		Description("Add new blog and return its ID.")
@@ -36,23 +26,15 @@ var _ = Service("create", func() {
 			POST("/")
 			Response(StatusCreated)
 		})
-		GRPC(func() {
-			Response(CodeOK)
-		})
 	})
 
 
 	Method("list", func() {
 		Description("List all entries")
-		Result(ArrayOf(StoredBlogs), func() {
-			// View("tiny")
-		})
+		Result(ArrayOf(StoredBlogs))
 		HTTP(func() {
 			GET("/")
 			Response(StatusOK)
-		})
-		GRPC(func() {
-			Response(CodeOK)
 		})
 	})
 
@@ -68,9 +50,6 @@ var _ = Service("create", func() {
 			DELETE("/{id}")
 			Response(StatusNoContent)
 		})
-		GRPC(func() {
-			Response(CodeOK)
-		})
 	})
 
 	Method("update", func() {
@@ -85,10 +64,6 @@ var _ = Service("create", func() {
 			PATCH("/{id}")
 			Response(StatusNoContent)
 		})
-		GRPC(func() {
-			Response(CodeOK)
-		})
-
 
 	})
 

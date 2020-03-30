@@ -16,10 +16,10 @@ paths:
   /:
     get:
       tags:
-      - create
-      summary: list create
+      - blog
+      summary: list blog
       description: List all entries
-      operationId: create#list
+      operationId: blog#list
       responses:
         "200":
           description: OK response.
@@ -31,30 +31,30 @@ paths:
       - http
     post:
       tags:
-      - create
-      summary: create create
+      - blog
+      summary: create blog
       description: Add new blog and return its ID.
-      operationId: create#create
+      operationId: blog#create
       parameters:
       - name: CreateRequestBody
         in: body
         required: true
         schema:
-          $ref: '#/definitions/CreateCreateRequestBody'
+          $ref: '#/definitions/BlogCreateRequestBody'
       responses:
         "201":
           description: Created response.
           schema:
-            $ref: '#/definitions/CreateCreateResponseBody'
+            $ref: '#/definitions/BlogCreateResponseBody'
       schemes:
       - http
   /{id}:
     delete:
       tags:
-      - create
-      summary: remove create
+      - blog
+      summary: remove blog
       description: Remove blog from storage
-      operationId: create#remove
+      operationId: blog#remove
       parameters:
       - name: id
         in: path
@@ -68,10 +68,10 @@ paths:
       - http
     patch:
       tags:
-      - create
-      summary: update create
+      - blog
+      summary: update blog
       description: Updating the existing blog
-      operationId: create#update
+      operationId: blog#update
       parameters:
       - name: id
         in: path
@@ -82,7 +82,7 @@ paths:
         in: body
         required: true
         schema:
-          $ref: '#/definitions/CreateUpdateRequestBody'
+          $ref: '#/definitions/BlogUpdateRequestBody'
           required:
           - name
           - comments
@@ -94,9 +94,9 @@ paths:
   /openapi.json:
     get:
       tags:
-      - create
+      - blog
       summary: Download ./gen/http/openapi.json
-      operationId: create#/openapi.json
+      operationId: blog#/openapi.json
       responses:
         "200":
           description: File downloaded
@@ -105,93 +105,94 @@ paths:
       schemes:
       - http
 definitions:
-  CreateCreateRequestBody:
-    title: CreateCreateRequestBody
+  BlogCreateRequestBody:
+    title: BlogCreateRequestBody
     type: object
     properties:
       comments:
         type: array
         items:
           type: string
-          example: Ut hic aliquid.
+          example: Deleniti ut ex aut non qui corporis.
         description: Comments
         example:
-        - Cum omnis a.
-        - Error sed pariatur.
-        - Nihil ipsa nihil quis.
+        - Aspernatur cumque quo.
+        - Itaque odit.
+        - Ex enim.
         maxItems: 100
       id:
         type: integer
         description: ID of a person
-        example: 1320006137
+        example: 3125156104
         format: int32
       name:
         type: string
         description: Name of person
-        example: v4m
+        example: nsm
         maxLength: 100
     example:
       comments:
-      - Necessitatibus esse aliquid ullam explicabo.
-      - Tenetur laudantium.
-      - Eaque omnis temporibus enim nihil animi.
-      id: 1259477015
-      name: glb
-  CreateCreateResponseBody:
-    title: CreateCreateResponseBody
+      - Labore nam minus nesciunt.
+      - Eveniet sed est dolor.
+      - Quia veritatis aut excepturi.
+      id: 1283642252
+      name: 72k
+  BlogCreateResponseBody:
+    title: BlogCreateResponseBody
     type: object
     properties:
       comments:
         type: array
         items:
           type: string
-          example: Cum laborum eos at.
+          example: Aperiam esse ut ut.
         description: Comments
         example:
-        - Incidunt autem consectetur ut iure numquam aut.
-        - Praesentium consequuntur.
-        - Eum voluptates pariatur.
+        - Enim architecto consequatur.
+        - Nihil molestiae.
+        - Et et nobis est omnis consequatur rerum.
         maxItems: 100
       id:
         type: integer
         description: ID of a person
-        example: 3054715757
+        example: 886122352
         format: int32
       name:
         type: string
         description: Name of person
-        example: 0yb
+        example: 5c8
         maxLength: 100
     example:
       comments:
-      - Aliquid nobis.
-      - Ab voluptas magni aut commodi et.
-      - Doloremque molestiae veritatis.
-      id: 97515051
-      name: vdd
-  CreateUpdateRequestBody:
-    title: CreateUpdateRequestBody
+      - Quis saepe.
+      - Dolor autem inventore rerum molestiae et iusto.
+      - Vel temporibus quam quis veniam.
+      id: 3343860529
+      name: d0e
+  BlogUpdateRequestBody:
+    title: BlogUpdateRequestBody
     type: object
     properties:
       comments:
         type: array
         items:
           type: string
-          example: Et alias.
+          example: Commodi et sint alias.
         description: Comments to be updated
         example:
-        - Similique optio voluptate labore perspiciatis doloribus.
-        - Quaerat explicabo quia fugiat iusto.
-        - Et molestiae.
+        - Earum vitae.
+        - Consectetur consectetur molestiae.
+        - Excepturi architecto dolores ad.
       name:
         type: string
         description: Details of blog to be updated
-        example: Neque impedit iste.
+        example: Velit voluptate eum.
     example:
       comments:
-      - Quia odio.
-      - Et voluptas pariatur laudantium sapiente.
-      name: Quo dolor exercitationem officiis soluta praesentium repellendus.
+      - Aut libero nesciunt.
+      - Sit optio officiis sint eos.
+      - Nostrum voluptatum recusandae officiis.
+      name: Corporis fugiat laudantium et eum fugiat.
     required:
     - name
     - comments
@@ -203,32 +204,32 @@ definitions:
         type: array
         items:
           type: string
-          example: Illo enim ut aut harum quaerat.
+          example: Quas nam possimus.
         description: Comments
         example:
-        - Quia aliquam.
-        - Dignissimos nesciunt enim.
-        - Necessitatibus fugiat.
+        - Doloribus recusandae cumque quia aut explicabo et.
+        - Modi est beatae cum.
+        - Atque nihil et perspiciatis asperiores ad dolorem.
         maxItems: 100
       id:
         type: integer
         description: ID is the unique id of the blog.
-        example: 1397568408
+        example: 680862294
         format: int32
       name:
         type: string
         description: Name of person
-        example: mcl
+        example: qg6
         maxLength: 100
     description: A Storedblog describes a blog retrieved by the storage service. (default
       view)
     example:
       comments:
-      - Nisi hic dolorem omnis non quaerat.
-      - Est nobis voluptatem animi reiciendis asperiores.
-      - Ullam magnam eos.
-      id: 2221896370
-      name: ik1
+      - Exercitationem quae provident necessitatibus architecto.
+      - Occaecati cumque neque.
+      - Voluptatem vel aut.
+      id: 875247103
+      name: ug9
     required:
     - id
     - name

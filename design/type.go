@@ -8,31 +8,17 @@ var StoredBlogs = ResultType("application/vnd.cellar.stored-blog", func() {
 	TypeName("Storedblog")
 
 	Attributes(func() {
-		Attribute("id", UInt32, "ID is the unique id of the blog.", func() {
-			Meta("rpc:tag", "8")
+		Attribute("id", UInt32, "ID is the unique id of the blog.")
+
+		Attribute("name", String, "Name of person", func() {
+			MaxLength(100)
 		})
-	Attribute("name", String, "Name of person", func() {
-		MaxLength(100)
-		Meta("rpc:tag", "1")
-	})
-	Attribute("comments", ArrayOf(String), "Comments", func() {
-		MaxLength(100)
-		Meta("rpc:tag", "4")
-	})
+
+		Attribute("comments", ArrayOf(String), "Comments", func() {
+			MaxLength(100)
+		})
 
 	})
-
-	// View("default", func() {
-	// 	Attribute("id")
-	// 	Attribute("name")
-
-	// })
-
-	// View("tiny", func() {
-	// 	Attribute("id")
-	// 	Attribute("name")
-
-	// })
 
 	Required("id", "name")
 })
@@ -40,16 +26,13 @@ var StoredBlogs = ResultType("application/vnd.cellar.stored-blog", func() {
 var Blog = Type("Blog", func() {
 	Description("Blog with id and name of a person")
 
-	Attribute("id", UInt32, "ID of a person", func() {
-		Meta("rpc:tag", "2")
-	})
+	Attribute("id", UInt32, "ID of a person")
+
 	Attribute("name", String, "Name of person", func() {
 		MaxLength(100)
-		Meta("rpc:tag", "1")
 	})
 	Attribute("comments", ArrayOf(String), "Comments", func() {
 		MaxLength(100)
-		Meta("rpc:tag", "4")
 	})
 
 })
