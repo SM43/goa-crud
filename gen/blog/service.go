@@ -21,6 +21,8 @@ type Service interface {
 	Remove(context.Context, *RemovePayload) (err error)
 	// Updating the existing blog
 	Update(context.Context, *UpdatePayload) (err error)
+	// Add new blog and return its ID.
+	Add(context.Context, *NewComment) (res *NewComment, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -31,7 +33,7 @@ const ServiceName = "blog"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [4]string{"create", "list", "remove", "update"}
+var MethodNames = [5]string{"create", "list", "remove", "update", "add"}
 
 // Blog is the payload type of the blog service create method.
 type Blog struct {
@@ -40,7 +42,7 @@ type Blog struct {
 	// Name of person
 	Name *string
 	// Comments
-	Comments []string
+	Comments []*Comments
 }
 
 // RemovePayload is the payload type of the blog service remove method.
@@ -56,7 +58,23 @@ type UpdatePayload struct {
 	// Details of blog to be updated
 	Name string
 	// Comments to be updated
-	Comments []string
+	Comments []*Comments
+}
+
+// NewComment is the payload type of the blog service add method.
+type NewComment struct {
+	// Id of blog
+	ID *uint32
+	// Comment added to an existing blog
+	Comments *Comments
+}
+
+// Id and comments
+type Comments struct {
+	// ID of a comment
+	ID *uint32
+	// Comment for the blog
+	Comments *string
 }
 
 // A Storedblog describes a blog retrieved by the storage service.
@@ -66,7 +84,7 @@ type Storedblog struct {
 	// Name of person
 	Name string
 	// Comments
-	Comments []string
+	Comments []*Comments
 }
 
 // NotFound is the type returned when attempting to show or delete a blog that

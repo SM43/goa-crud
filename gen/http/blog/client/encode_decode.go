@@ -273,6 +273,126 @@ func DecodeUpdateResponse(decoder func(*http.Response) goahttp.Decoder, restoreB
 	}
 }
 
+// BuildAddRequest instantiates a HTTP request object with method and path set
+// to call the "blog" service "add" endpoint
+func (c *Client) BuildAddRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	var (
+		id uint32
+	)
+	{
+		p, ok := v.(*blog.NewComment)
+		if !ok {
+			return nil, goahttp.ErrInvalidType("blog", "add", "*blog.NewComment", v)
+		}
+		if p.ID != nil {
+			id = *p.ID
+		}
+	}
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: AddBlogPath(id)}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("blog", "add", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// EncodeAddRequest returns an encoder for requests sent to the blog add server.
+func EncodeAddRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+	return func(req *http.Request, v interface{}) error {
+		p, ok := v.(*blog.NewComment)
+		if !ok {
+			return goahttp.ErrInvalidType("blog", "add", "*blog.NewComment", v)
+		}
+		body := NewAddRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("blog", "add", err)
+		}
+		return nil
+	}
+}
+
+// DecodeAddResponse returns a decoder for responses returned by the blog add
+// endpoint. restoreBody controls whether the response body should be restored
+// after having been read.
+func DecodeAddResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusCreated:
+			var (
+				body AddResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("blog", "add", err)
+			}
+			res := NewAddNewCommentCreated(&body)
+			return res, nil
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("blog", "add", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// marshalBlogCommentsToCommentsRequestBody builds a value of type
+// *CommentsRequestBody from a value of type *blog.Comments.
+func marshalBlogCommentsToCommentsRequestBody(v *blog.Comments) *CommentsRequestBody {
+	if v == nil {
+		return nil
+	}
+	res := &CommentsRequestBody{
+		ID:       v.ID,
+		Comments: v.Comments,
+	}
+
+	return res
+}
+
+// marshalCommentsRequestBodyToBlogComments builds a value of type
+// *blog.Comments from a value of type *CommentsRequestBody.
+func marshalCommentsRequestBodyToBlogComments(v *CommentsRequestBody) *blog.Comments {
+	if v == nil {
+		return nil
+	}
+	res := &blog.Comments{
+		ID:       v.ID,
+		Comments: v.Comments,
+	}
+
+	return res
+}
+
+// unmarshalCommentsResponseBodyToBlogComments builds a value of type
+// *blog.Comments from a value of type *CommentsResponseBody.
+func unmarshalCommentsResponseBodyToBlogComments(v *CommentsResponseBody) *blog.Comments {
+	if v == nil {
+		return nil
+	}
+	res := &blog.Comments{
+		ID:       v.ID,
+		Comments: v.Comments,
+	}
+
+	return res
+}
+
 // unmarshalStoredblogResponseToBlogStoredblog builds a value of type
 // *blog.Storedblog from a value of type *StoredblogResponse.
 func unmarshalStoredblogResponseToBlogStoredblog(v *StoredblogResponse) *blog.Storedblog {
@@ -281,10 +401,24 @@ func unmarshalStoredblogResponseToBlogStoredblog(v *StoredblogResponse) *blog.St
 		Name: *v.Name,
 	}
 	if v.Comments != nil {
-		res.Comments = make([]string, len(v.Comments))
+		res.Comments = make([]*blog.Comments, len(v.Comments))
 		for i, val := range v.Comments {
-			res.Comments[i] = val
+			res.Comments[i] = unmarshalCommentsResponseToBlogComments(val)
 		}
+	}
+
+	return res
+}
+
+// unmarshalCommentsResponseToBlogComments builds a value of type
+// *blog.Comments from a value of type *CommentsResponse.
+func unmarshalCommentsResponseToBlogComments(v *CommentsResponse) *blog.Comments {
+	if v == nil {
+		return nil
+	}
+	res := &blog.Comments{
+		ID:       v.ID,
+		Comments: v.Comments,
 	}
 
 	return res

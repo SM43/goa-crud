@@ -24,7 +24,7 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         \"Aperiam id corporis voluptatibus inventore.\",\n         \"Sed et aut voluptatem et voluptas.\",\n         \"Consequatur sunt asperiores natus iste eaque.\"\n      ],\n      \"id\": 3752768668,\n      \"name\": \"4dp\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"id\": 2998605239,\n      \"name\": \"53p\"\n   }'")
 		}
 	}
 	v := &blog.Blog{
@@ -32,9 +32,9 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 		Name: body.Name,
 	}
 	if body.Comments != nil {
-		v.Comments = make([]string, len(body.Comments))
+		v.Comments = make([]*blog.Comments, len(body.Comments))
 		for i, val := range body.Comments {
-			v.Comments[i] = val
+			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
 		}
 	}
 
@@ -68,7 +68,7 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 	{
 		err = json.Unmarshal([]byte(blogUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         \"Necessitatibus id.\",\n         \"Quos distinctio blanditiis cum totam molestiae dolorum.\",\n         \"Impedit ipsam cupiditate soluta consequatur beatae soluta.\",\n         \"Aut tempore dolore.\"\n      ],\n      \"name\": \"Tenetur numquam iste et eos.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"Et incidunt.\"\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
@@ -90,10 +90,38 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 		Name: body.Name,
 	}
 	if body.Comments != nil {
-		v.Comments = make([]string, len(body.Comments))
+		v.Comments = make([]*blog.Comments, len(body.Comments))
 		for i, val := range body.Comments {
-			v.Comments[i] = val
+			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
 		}
+	}
+	v.ID = &id
+
+	return v, nil
+}
+
+// BuildAddPayload builds the payload for the blog add endpoint from CLI flags.
+func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, error) {
+	var err error
+	var body AddRequestBody
+	{
+		err = json.Unmarshal([]byte(blogAddBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Consequatur nesciunt.\",\n         \"id\": 3163100479\n      }\n   }'")
+		}
+	}
+	var id uint32
+	{
+		var v uint64
+		v, err = strconv.ParseUint(blogAddID, 10, 32)
+		id = uint32(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for id, must be UINT32")
+		}
+	}
+	v := &blog.NewComment{}
+	if body.Comments != nil {
+		v.Comments = marshalCommentsRequestBodyToBlogComments(body.Comments)
 	}
 	v.ID = &id
 

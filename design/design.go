@@ -57,7 +57,7 @@ var _ = Service("blog", func() {
 		Payload(func() {
 			Field(1, "id", UInt32, "ID of blog to be updated")
 			Field(2,"name", String, "Details of blog to be updated")
-			Field(3, "comments", ArrayOf(String), "Comments to be updated")
+			Field(3, "comments", ArrayOf(comments), "Comments to be updated")
 			Required("name", "comments")
 		})
 		HTTP(func() {
@@ -65,6 +65,16 @@ var _ = Service("blog", func() {
 			Response(StatusNoContent)
 		})
 
+	})
+
+	Method("add", func() {
+		Description("Add new blog and return its ID.")
+		Payload(new_comment)
+		Result(new_comment)
+		HTTP(func() {
+			POST("/{id}/comments/")
+			Response(StatusCreated)
+		})
 	})
 
 	Files("/openapi.json", "./gen/http/openapi.json")

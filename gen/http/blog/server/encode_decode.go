@@ -154,6 +154,84 @@ func DecodeUpdateRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.
 	}
 }
 
+// EncodeAddResponse returns an encoder for responses returned by the blog add
+// endpoint.
+func EncodeAddResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res := v.(*blog.NewComment)
+		enc := encoder(ctx, w)
+		body := NewAddResponseBody(res)
+		w.WriteHeader(http.StatusCreated)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeAddRequest returns a decoder for requests sent to the blog add
+// endpoint.
+func DecodeAddRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			body AddRequestBody
+			err  error
+		)
+		err = decoder(r).Decode(&body)
+		if err != nil {
+			if err == io.EOF {
+				return nil, goa.MissingPayloadError()
+			}
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+
+		var (
+			id uint32
+
+			params = mux.Vars(r)
+		)
+		{
+			idRaw := params["id"]
+			v, err2 := strconv.ParseUint(idRaw, 10, 32)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("id", idRaw, "unsigned integer"))
+			}
+			id = uint32(v)
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewAddNewComment(&body, id)
+
+		return payload, nil
+	}
+}
+
+// unmarshalCommentsRequestBodyToBlogComments builds a value of type
+// *blog.Comments from a value of type *CommentsRequestBody.
+func unmarshalCommentsRequestBodyToBlogComments(v *CommentsRequestBody) *blog.Comments {
+	if v == nil {
+		return nil
+	}
+	res := &blog.Comments{
+		ID:       v.ID,
+		Comments: v.Comments,
+	}
+
+	return res
+}
+
+// marshalBlogCommentsToCommentsResponseBody builds a value of type
+// *CommentsResponseBody from a value of type *blog.Comments.
+func marshalBlogCommentsToCommentsResponseBody(v *blog.Comments) *CommentsResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &CommentsResponseBody{
+		ID:       v.ID,
+		Comments: v.Comments,
+	}
+
+	return res
+}
+
 // marshalBlogStoredblogToStoredblogResponse builds a value of type
 // *StoredblogResponse from a value of type *blog.Storedblog.
 func marshalBlogStoredblogToStoredblogResponse(v *blog.Storedblog) *StoredblogResponse {
@@ -162,10 +240,24 @@ func marshalBlogStoredblogToStoredblogResponse(v *blog.Storedblog) *StoredblogRe
 		Name: v.Name,
 	}
 	if v.Comments != nil {
-		res.Comments = make([]string, len(v.Comments))
+		res.Comments = make([]*CommentsResponse, len(v.Comments))
 		for i, val := range v.Comments {
-			res.Comments[i] = val
+			res.Comments[i] = marshalBlogCommentsToCommentsResponse(val)
 		}
+	}
+
+	return res
+}
+
+// marshalBlogCommentsToCommentsResponse builds a value of type
+// *CommentsResponse from a value of type *blog.Comments.
+func marshalBlogCommentsToCommentsResponse(v *blog.Comments) *CommentsResponse {
+	if v == nil {
+		return nil
+	}
+	res := &CommentsResponse{
+		ID:       v.ID,
+		Comments: v.Comments,
 	}
 
 	return res

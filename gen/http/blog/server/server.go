@@ -23,6 +23,7 @@ type Server struct {
 	List   http.Handler
 	Remove http.Handler
 	Update http.Handler
+	Add    http.Handler
 }
 
 // ErrorNamer is an interface implemented by generated error structs that
@@ -62,12 +63,14 @@ func New(
 			{"List", "GET", "/"},
 			{"Remove", "DELETE", "/{id}"},
 			{"Update", "PATCH", "/{id}"},
+			{"Add", "POST", "/{id}/comments"},
 			{"./gen/http/openapi.json", "GET", "/openapi.json"},
 		},
 		Create: NewCreateHandler(e.Create, mux, decoder, encoder, errhandler, formatter),
 		List:   NewListHandler(e.List, mux, decoder, encoder, errhandler, formatter),
 		Remove: NewRemoveHandler(e.Remove, mux, decoder, encoder, errhandler, formatter),
 		Update: NewUpdateHandler(e.Update, mux, decoder, encoder, errhandler, formatter),
+		Add:    NewAddHandler(e.Add, mux, decoder, encoder, errhandler, formatter),
 	}
 }
 
@@ -80,6 +83,7 @@ func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.List = m(s.List)
 	s.Remove = m(s.Remove)
 	s.Update = m(s.Update)
+	s.Add = m(s.Add)
 }
 
 // Mount configures the mux to serve the blog endpoints.
@@ -88,6 +92,7 @@ func Mount(mux goahttp.Muxer, h *Server) {
 	MountListHandler(mux, h.List)
 	MountRemoveHandler(mux, h.Remove)
 	MountUpdateHandler(mux, h.Update)
+	MountAddHandler(mux, h.Add)
 	MountGenHTTPOpenapiJSON(mux, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./gen/http/openapi.json")
 	}))
@@ -269,6 +274,57 @@ func NewUpdateHandler(
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
 		ctx = context.WithValue(ctx, goa.MethodKey, "update")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountAddHandler configures the mux to serve the "blog" service "add"
+// endpoint.
+func MountAddHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := h.(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/{id}/comments", f)
+}
+
+// NewAddHandler creates a HTTP handler which loads the HTTP request and calls
+// the "blog" service "add" endpoint.
+func NewAddHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeAddRequest(mux, decoder)
+		encodeResponse = EncodeAddResponse(encoder)
+		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "add")
 		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
 		payload, err := decodeRequest(r)
 		if err != nil {

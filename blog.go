@@ -12,14 +12,7 @@ type blogsrvc struct {
 	logger *log.Logger
 }
 
-type Blog struct{
-	ID uint32
-	Name string
-	comment []string
-}
-
-
-var blog_object = make([]Blog, 0)
+var blog_store = make([]*blog.Storedblog, 0)
 
 // NewBlog returns the blog service implementation.
 func NewBlog(logger *log.Logger) blog.Service {
@@ -31,13 +24,8 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 	res = &blog.Blog{}
 	s.logger.Print("blog.create")
 
-	var obj Blog
-	obj.ID = *p.ID
-	obj.Name = *p.Name
-	obj.comment = p.Comments
-
-	blog_object = append(blog_object, obj)
-	log.Print(blog_object)
+	item := blog.Storedblog{*p.ID, *p.Name, p.Comments}
+	blog_store = append(blog_store, &item)
 
 	newBlog := (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
 	return newBlog, nil
@@ -47,21 +35,17 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 func (s *blogsrvc) List(ctx context.Context) (res []*blog.Storedblog, err error) {
 	s.logger.Print("blog.list")
 
-	result := []*blog.Storedblog{}
-	for _,all_blogs := range blog_object{
-		item := blog.Storedblog{all_blogs.ID, all_blogs.Name, all_blogs.comment}
-		result= append(result, &item)
-	}
-	return result, nil
+	return blog_store, nil
 }
 
 // Remove blog from storage
 func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error) {
+
 	s.logger.Print("blog.remove")
 
-	for i, singleBlog := range blog_object {
+	for i, singleBlog := range blog_store {
 		if singleBlog.ID == p.ID {
-			blog_object = append(blog_object[:i], blog_object[i+1:]...)
+			blog_store = append(blog_store[:i], blog_store[i+1:]...)
 			log.Print("The event with ID has been deleted successfully", singleBlog.ID)
 		}
 	}
@@ -72,12 +56,23 @@ func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error
 func (s *blogsrvc) Update(ctx context.Context, p *blog.UpdatePayload) (err error) {
 	s.logger.Print("blog.update")
 
-	for i, singleBlog := range blog_object {
+	for i, singleBlog := range blog_store {
 		if singleBlog.ID == *p.ID {
 			singleBlog.Name = p.Name
-			singleBlog.comment = p.Comments
-			blog_object = append(blog_object[:i], singleBlog)
+			singleBlog.Comments = p.Comments
+			blog_store = append(blog_store[:i], singleBlog)
 		}
 	}
+	return
+}
+
+// Add new blog and return its ID.
+func (s *blogsrvc) Add(ctx context.Context, p *blog.NewComment) (res *blog.NewComment, err error) {
+
+	res = &blog.NewComment{}
+	s.logger.Print("blog.add")
+
+	blog_store[*p.ID - 1].Comments = append(blog_store[*p.ID - 1].Comments, p.Comments)
+
 	return
 }

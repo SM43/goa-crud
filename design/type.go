@@ -14,7 +14,7 @@ var StoredBlogs = ResultType("application/vnd.cellar.stored-blog", func() {
 			MaxLength(100)
 		})
 
-		Attribute("comments", ArrayOf(String), "Comments", func() {
+		Attribute("comments", ArrayOf(comments), "Comments", func() {
 			MaxLength(100)
 		})
 
@@ -31,15 +31,33 @@ var Blog = Type("Blog", func() {
 	Attribute("name", String, "Name of person", func() {
 		MaxLength(100)
 	})
-	Attribute("comments", ArrayOf(String), "Comments", func() {
+	Attribute("comments", ArrayOf(comments), "Comments", func() {
 		MaxLength(100)
 	})
 
 })
 
+var new_comment = Type("new_comment", func() {
+	Description("New comment to be added to an existing blog")
+
+	Attribute("id", UInt32, "Id of blog")
+
+	Attribute("comments", comments, "Comment added to an existing blog")
+
+})
+
+var comments = Type("Comments", func() {
+
+	Description("Id and comments")
+
+	Attribute("id", UInt32, "ID of a comment")
+
+	Attribute("comments", String, "Comment for the blog")
+})
+
 var NotFound = Type("NotFound", func() {
 	Description("NotFound is the type returned when attempting to show or delete a blog that does not exist.")
-	Field(2, "id", String, "ID of missing blog")
+	Field(2, "id", UInt32, "ID of missing blog")
 	Required("id")
 })
 

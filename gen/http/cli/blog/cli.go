@@ -23,7 +23,7 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `blog (create|list|remove|update)
+	return `blog (create|list|remove|update|add)
 `
 }
 
@@ -31,12 +31,21 @@ func UsageCommands() string {
 func UsageExamples() string {
 	return os.Args[0] + ` blog create --body '{
       "comments": [
-         "Aperiam id corporis voluptatibus inventore.",
-         "Sed et aut voluptatem et voluptas.",
-         "Consequatur sunt asperiores natus iste eaque."
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         }
       ],
-      "id": 3752768668,
-      "name": "4dp"
+      "id": 2998605239,
+      "name": "53p"
    }'` + "\n" +
 		""
 }
@@ -64,12 +73,17 @@ func ParseEndpoint(
 		blogUpdateFlags    = flag.NewFlagSet("update", flag.ExitOnError)
 		blogUpdateBodyFlag = blogUpdateFlags.String("body", "REQUIRED", "")
 		blogUpdateIDFlag   = blogUpdateFlags.String("id", "REQUIRED", "ID of blog to be updated")
+
+		blogAddFlags    = flag.NewFlagSet("add", flag.ExitOnError)
+		blogAddBodyFlag = blogAddFlags.String("body", "REQUIRED", "")
+		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of blog")
 	)
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
 	blogListFlags.Usage = blogListUsage
 	blogRemoveFlags.Usage = blogRemoveUsage
 	blogUpdateFlags.Usage = blogUpdateUsage
+	blogAddFlags.Usage = blogAddUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -117,6 +131,9 @@ func ParseEndpoint(
 			case "update":
 				epf = blogUpdateFlags
 
+			case "add":
+				epf = blogAddFlags
+
 			}
 
 		}
@@ -154,6 +171,9 @@ func ParseEndpoint(
 			case "update":
 				endpoint = c.Update()
 				data, err = blogc.BuildUpdatePayload(*blogUpdateBodyFlag, *blogUpdateIDFlag)
+			case "add":
+				endpoint = c.Add()
+				data, err = blogc.BuildAddPayload(*blogAddBodyFlag, *blogAddIDFlag)
 			}
 		}
 	}
@@ -175,6 +195,7 @@ COMMAND:
     list: List all entries
     remove: Remove blog from storage
     update: Updating the existing blog
+    add: Add new blog and return its ID.
 
 Additional help:
     %s blog COMMAND --help
@@ -189,12 +210,21 @@ Add new blog and return its ID.
 Example:
     `+os.Args[0]+` blog create --body '{
       "comments": [
-         "Aperiam id corporis voluptatibus inventore.",
-         "Sed et aut voluptatem et voluptas.",
-         "Consequatur sunt asperiores natus iste eaque."
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         }
       ],
-      "id": 3752768668,
-      "name": "4dp"
+      "id": 2998605239,
+      "name": "53p"
    }'
 `, os.Args[0])
 }
@@ -216,7 +246,7 @@ Remove blog from storage
     -id UINT32: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 3407509870
+    `+os.Args[0]+` blog remove --id 3140786710
 `, os.Args[0])
 }
 
@@ -230,12 +260,37 @@ Updating the existing blog
 Example:
     `+os.Args[0]+` blog update --body '{
       "comments": [
-         "Necessitatibus id.",
-         "Quos distinctio blanditiis cum totam molestiae dolorum.",
-         "Impedit ipsam cupiditate soluta consequatur beatae soluta.",
-         "Aut tempore dolore."
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         }
       ],
-      "name": "Tenetur numquam iste et eos."
-   }' --id 2497136214
+      "name": "Et incidunt."
+   }' --id 43896983
+`, os.Args[0])
+}
+
+func blogAddUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] blog add -body JSON -id UINT32
+
+Add new blog and return its ID.
+    -body JSON: 
+    -id UINT32: Id of blog
+
+Example:
+    `+os.Args[0]+` blog add --body '{
+      "comments": {
+         "comments": "Consequatur nesciunt.",
+         "id": 3163100479
+      }
+   }' --id 3809683775
 `, os.Args[0])
 }

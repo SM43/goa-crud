@@ -91,6 +91,31 @@ paths:
           description: No Content response.
       schemes:
       - http
+  /{id}/comments:
+    post:
+      tags:
+      - blog
+      summary: add blog
+      description: Add new blog and return its ID.
+      operationId: blog#add
+      parameters:
+      - name: id
+        in: path
+        description: Id of blog
+        required: true
+        type: integer
+      - name: AddRequestBody
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/BlogAddRequestBody'
+      responses:
+        "201":
+          description: Created response.
+          schema:
+            $ref: '#/definitions/BlogAddResponseBody'
+      schemes:
+      - http
   /openapi.json:
     get:
       tags:
@@ -105,6 +130,32 @@ paths:
       schemes:
       - http
 definitions:
+  BlogAddRequestBody:
+    title: BlogAddRequestBody
+    type: object
+    properties:
+      comments:
+        $ref: '#/definitions/CommentsRequestBody'
+    example:
+      comments:
+        comments: Consequatur nesciunt.
+        id: 3163100479
+  BlogAddResponseBody:
+    title: BlogAddResponseBody
+    type: object
+    properties:
+      comments:
+        $ref: '#/definitions/CommentsResponseBody'
+      id:
+        type: integer
+        description: Id of blog
+        example: 1227376400
+        format: int32
+    example:
+      comments:
+        comments: Est ut.
+        id: 2591390728
+      id: 2497136214
   BlogCreateRequestBody:
     title: BlogCreateRequestBody
     type: object
@@ -112,31 +163,36 @@ definitions:
       comments:
         type: array
         items:
-          type: string
-          example: Deleniti ut ex aut non qui corporis.
+          $ref: '#/definitions/CommentsRequestBody'
         description: Comments
         example:
-        - Aspernatur cumque quo.
-        - Itaque odit.
-        - Ex enim.
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
         maxItems: 100
       id:
         type: integer
         description: ID of a person
-        example: 3125156104
+        example: 3102958172
         format: int32
       name:
         type: string
         description: Name of person
-        example: nsm
+        example: 8pj
         maxLength: 100
     example:
       comments:
-      - Labore nam minus nesciunt.
-      - Eveniet sed est dolor.
-      - Quia veritatis aut excepturi.
-      id: 1283642252
-      name: 72k
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      id: 1462081552
+      name: gb4
   BlogCreateResponseBody:
     title: BlogCreateResponseBody
     type: object
@@ -144,31 +200,36 @@ definitions:
       comments:
         type: array
         items:
-          type: string
-          example: Aperiam esse ut ut.
+          $ref: '#/definitions/CommentsResponseBody'
         description: Comments
         example:
-        - Enim architecto consequatur.
-        - Nihil molestiae.
-        - Et et nobis est omnis consequatur rerum.
+        - comments: Est ut.
+          id: 2591390728
+        - comments: Est ut.
+          id: 2591390728
+        - comments: Est ut.
+          id: 2591390728
         maxItems: 100
       id:
         type: integer
         description: ID of a person
-        example: 886122352
+        example: 817814709
         format: int32
       name:
         type: string
         description: Name of person
-        example: 5c8
+        example: 4r0
         maxLength: 100
     example:
       comments:
-      - Quis saepe.
-      - Dolor autem inventore rerum molestiae et iusto.
-      - Vel temporibus quam quis veniam.
-      id: 3343860529
-      name: d0e
+      - comments: Est ut.
+        id: 2591390728
+      - comments: Est ut.
+        id: 2591390728
+      - comments: Est ut.
+        id: 2591390728
+      id: 1578833571
+      name: xv5
   BlogUpdateRequestBody:
     title: BlogUpdateRequestBody
     type: object
@@ -176,26 +237,80 @@ definitions:
       comments:
         type: array
         items:
-          type: string
-          example: Commodi et sint alias.
+          $ref: '#/definitions/CommentsRequestBody'
         description: Comments to be updated
         example:
-        - Earum vitae.
-        - Consectetur consectetur molestiae.
-        - Excepturi architecto dolores ad.
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
       name:
         type: string
         description: Details of blog to be updated
-        example: Velit voluptate eum.
+        example: Totam molestiae dolorum omnis impedit.
     example:
       comments:
-      - Aut libero nesciunt.
-      - Sit optio officiis sint eos.
-      - Nostrum voluptatum recusandae officiis.
-      name: Corporis fugiat laudantium et eum fugiat.
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      name: Soluta consequatur beatae soluta voluptatibus aut.
     required:
     - name
     - comments
+  CommentsRequestBody:
+    title: CommentsRequestBody
+    type: object
+    properties:
+      comments:
+        type: string
+        description: Comment for the blog
+        example: Iure velit.
+      id:
+        type: integer
+        description: ID of a comment
+        example: 4088298408
+        format: int32
+    description: Id and comments
+    example:
+      comments: Voluptate excepturi totam ducimus.
+      id: 3298756195
+  CommentsResponse:
+    title: CommentsResponse
+    type: object
+    properties:
+      comments:
+        type: string
+        description: Comment for the blog
+        example: Et ullam nihil.
+      id:
+        type: integer
+        description: ID of a comment
+        example: 2331204871
+        format: int32
+    description: Id and comments
+    example:
+      comments: Numquam iste et eos voluptatem.
+      id: 784797655
+  CommentsResponseBody:
+    title: CommentsResponseBody
+    type: object
+    properties:
+      comments:
+        type: string
+        description: Comment for the blog
+        example: At et.
+      id:
+        type: integer
+        description: ID of a comment
+        example: 914945699
+        format: int32
+    description: Id and comments
+    example:
+      comments: Aperiam id corporis voluptatibus inventore.
+      id: 2468836870
   StoredblogResponse:
     title: 'Mediatype identifier: application/vnd.cellar.stored-blog; view=default'
     type: object
@@ -203,33 +318,38 @@ definitions:
       comments:
         type: array
         items:
-          type: string
-          example: Quas nam possimus.
+          $ref: '#/definitions/CommentsResponse'
         description: Comments
         example:
-        - Doloribus recusandae cumque quia aut explicabo et.
-        - Modi est beatae cum.
-        - Atque nihil et perspiciatis asperiores ad dolorem.
+        - comments: Dolores et.
+          id: 1521196964
+        - comments: Dolores et.
+          id: 1521196964
+        - comments: Dolores et.
+          id: 1521196964
         maxItems: 100
       id:
         type: integer
         description: ID is the unique id of the blog.
-        example: 680862294
+        example: 1303724017
         format: int32
       name:
         type: string
         description: Name of person
-        example: qg6
+        example: npp
         maxLength: 100
     description: A Storedblog describes a blog retrieved by the storage service. (default
       view)
     example:
       comments:
-      - Exercitationem quae provident necessitatibus architecto.
-      - Occaecati cumque neque.
-      - Voluptatem vel aut.
-      id: 875247103
-      name: ug9
+      - comments: Dolores et.
+        id: 1521196964
+      - comments: Dolores et.
+        id: 1521196964
+      - comments: Dolores et.
+        id: 1521196964
+      id: 3738307162
+      name: lsc
     required:
     - id
     - name

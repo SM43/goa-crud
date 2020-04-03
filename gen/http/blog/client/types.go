@@ -22,7 +22,7 @@ type CreateRequestBody struct {
 	// Name of person
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Comments
-	Comments []string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // UpdateRequestBody is the type of the "blog" service "update" endpoint HTTP
@@ -31,7 +31,14 @@ type UpdateRequestBody struct {
 	// Details of blog to be updated
 	Name string `form:"name" json:"name" xml:"name"`
 	// Comments to be updated
-	Comments []string `form:"comments" json:"comments" xml:"comments"`
+	Comments []*CommentsRequestBody `form:"comments" json:"comments" xml:"comments"`
+}
+
+// AddRequestBody is the type of the "blog" service "add" endpoint HTTP request
+// body.
+type AddRequestBody struct {
+	// Comment added to an existing blog
+	Comments *CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // CreateResponseBody is the type of the "blog" service "create" endpoint HTTP
@@ -42,12 +49,37 @@ type CreateResponseBody struct {
 	// Name of person
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Comments
-	Comments []string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	Comments []*CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // ListResponseBody is the type of the "blog" service "list" endpoint HTTP
 // response body.
 type ListResponseBody []*StoredblogResponse
+
+// AddResponseBody is the type of the "blog" service "add" endpoint HTTP
+// response body.
+type AddResponseBody struct {
+	// Id of blog
+	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Comment added to an existing blog
+	Comments *CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
+
+// CommentsRequestBody is used to define fields on request body types.
+type CommentsRequestBody struct {
+	// ID of a comment
+	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Comment for the blog
+	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
+
+// CommentsResponseBody is used to define fields on response body types.
+type CommentsResponseBody struct {
+	// ID of a comment
+	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Comment for the blog
+	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
 
 // StoredblogResponse is used to define fields on response body types.
 type StoredblogResponse struct {
@@ -56,7 +88,15 @@ type StoredblogResponse struct {
 	// Name of person
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// Comments
-	Comments []string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	Comments []*CommentsResponse `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
+
+// CommentsResponse is used to define fields on response body types.
+type CommentsResponse struct {
+	// ID of a comment
+	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Comment for the blog
+	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // NewCreateRequestBody builds the HTTP request body from the payload of the
@@ -67,9 +107,9 @@ func NewCreateRequestBody(p *blog.Blog) *CreateRequestBody {
 		Name: p.Name,
 	}
 	if p.Comments != nil {
-		body.Comments = make([]string, len(p.Comments))
+		body.Comments = make([]*CommentsRequestBody, len(p.Comments))
 		for i, val := range p.Comments {
-			body.Comments[i] = val
+			body.Comments[i] = marshalBlogCommentsToCommentsRequestBody(val)
 		}
 	}
 	return body
@@ -82,10 +122,20 @@ func NewUpdateRequestBody(p *blog.UpdatePayload) *UpdateRequestBody {
 		Name: p.Name,
 	}
 	if p.Comments != nil {
-		body.Comments = make([]string, len(p.Comments))
+		body.Comments = make([]*CommentsRequestBody, len(p.Comments))
 		for i, val := range p.Comments {
-			body.Comments[i] = val
+			body.Comments[i] = marshalBlogCommentsToCommentsRequestBody(val)
 		}
+	}
+	return body
+}
+
+// NewAddRequestBody builds the HTTP request body from the payload of the "add"
+// endpoint of the "blog" service.
+func NewAddRequestBody(p *blog.NewComment) *AddRequestBody {
+	body := &AddRequestBody{}
+	if p.Comments != nil {
+		body.Comments = marshalBlogCommentsToCommentsRequestBody(p.Comments)
 	}
 	return body
 }
@@ -98,9 +148,9 @@ func NewCreateBlogCreated(body *CreateResponseBody) *blog.Blog {
 		Name: body.Name,
 	}
 	if body.Comments != nil {
-		v.Comments = make([]string, len(body.Comments))
+		v.Comments = make([]*blog.Comments, len(body.Comments))
 		for i, val := range body.Comments {
-			v.Comments[i] = val
+			v.Comments[i] = unmarshalCommentsResponseBodyToBlogComments(val)
 		}
 	}
 
@@ -114,6 +164,19 @@ func NewListStoredblogOK(body []*StoredblogResponse) []*blog.Storedblog {
 	for i, val := range body {
 		v[i] = unmarshalStoredblogResponseToBlogStoredblog(val)
 	}
+	return v
+}
+
+// NewAddNewCommentCreated builds a "blog" service "add" endpoint result from a
+// HTTP "Created" response.
+func NewAddNewCommentCreated(body *AddResponseBody) *blog.NewComment {
+	v := &blog.NewComment{
+		ID: body.ID,
+	}
+	if body.Comments != nil {
+		v.Comments = unmarshalCommentsResponseBodyToBlogComments(body.Comments)
+	}
+
 	return v
 }
 
