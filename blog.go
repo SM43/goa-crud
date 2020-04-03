@@ -27,8 +27,8 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 	item := blog.Storedblog{*p.ID, *p.Name, p.Comments}
 	blog_store = append(blog_store, &item)
 
-	newBlog := (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
-	return newBlog, nil
+	res = (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
+	return
 }
 
 // List all entries

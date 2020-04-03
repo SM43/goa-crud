@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
-  title: Hello Service
-  description: Service to print hello
+  title: Blog Service
+  description: Service to perform CRUD operations using goa
   version: ""
 host: localhost:8000
 consumes:

@@ -5,8 +5,8 @@ import (
 )
 
 var _ = API("blog", func() {
-	Title("Hello Service")
-	Description("Service to print hello")
+	Title("Blog Service")
+	Description("Service to perform CRUD operations using goa")
     Server("blog", func() {
         Host("localhost", func() {
             URI("http://localhost:8000")
@@ -18,6 +18,7 @@ var _ = API("blog", func() {
 var _ = Service("blog", func() {
 	Description("The blog service gives blog details.")
 
+	//Method to post new blog
 	Method("create", func() {
 		Description("Add new blog and return its ID.")
 		Payload(Blog)
@@ -28,7 +29,7 @@ var _ = Service("blog", func() {
 		})
 	})
 
-
+	//Method to get all existing blogs
 	Method("list", func() {
 		Description("List all entries")
 		Result(ArrayOf(StoredBlogs))
@@ -38,7 +39,7 @@ var _ = Service("blog", func() {
 		})
 	})
 
-
+	//Method to remove a particular blog
 	Method("remove", func() {
 		Description("Remove blog from storage")
 		Payload(func() {
@@ -52,6 +53,7 @@ var _ = Service("blog", func() {
 		})
 	})
 
+	//Method to update a specific blog
 	Method("update", func() {
 		Description("Updating the existing blog")
 		Payload(func() {
@@ -67,6 +69,7 @@ var _ = Service("blog", func() {
 
 	})
 
+	//Method to add a new comment to an existing blog
 	Method("add", func() {
 		Description("Add new blog and return its ID.")
 		Payload(new_comment)
@@ -77,6 +80,7 @@ var _ = Service("blog", func() {
 		})
 	})
 
+	//Method to get a particular blog based on id
 	Method("show", func() {
 		Description("Show blog based on the id given")
 		Payload(Blog)
