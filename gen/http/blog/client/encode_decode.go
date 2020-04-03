@@ -351,6 +351,89 @@ func DecodeAddResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody
 	}
 }
 
+// BuildShowRequest instantiates a HTTP request object with method and path set
+// to call the "blog" service "show" endpoint
+func (c *Client) BuildShowRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	var (
+		id uint32
+	)
+	{
+		p, ok := v.(*blog.Blog)
+		if !ok {
+			return nil, goahttp.ErrInvalidType("blog", "show", "*blog.Blog", v)
+		}
+		if p.ID != nil {
+			id = *p.ID
+		}
+	}
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: ShowBlogPath(id)}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("blog", "show", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// EncodeShowRequest returns an encoder for requests sent to the blog show
+// server.
+func EncodeShowRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+	return func(req *http.Request, v interface{}) error {
+		p, ok := v.(*blog.Blog)
+		if !ok {
+			return goahttp.ErrInvalidType("blog", "show", "*blog.Blog", v)
+		}
+		body := NewShowRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("blog", "show", err)
+		}
+		return nil
+	}
+}
+
+// DecodeShowResponse returns a decoder for responses returned by the blog show
+// endpoint. restoreBody controls whether the response body should be restored
+// after having been read.
+func DecodeShowResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			var (
+				body ShowResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("blog", "show", err)
+			}
+			err = ValidateShowResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("blog", "show", err)
+			}
+			res := NewShowBlogOK(&body)
+			return res, nil
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("blog", "show", resp.StatusCode, string(body))
+		}
+	}
+}
+
 // marshalBlogCommentsToCommentsRequestBody builds a value of type
 // *CommentsRequestBody from a value of type *blog.Comments.
 func marshalBlogCommentsToCommentsRequestBody(v *blog.Comments) *CommentsRequestBody {

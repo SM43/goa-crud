@@ -49,6 +49,30 @@ paths:
       schemes:
       - http
   /{id}:
+    get:
+      tags:
+      - blog
+      summary: show blog
+      description: Show blog based on the id given
+      operationId: blog#show
+      parameters:
+      - name: id
+        in: path
+        description: ID of a person
+        required: true
+        type: integer
+      - name: ShowRequestBody
+        in: body
+        required: true
+        schema:
+          $ref: '#/definitions/BlogShowRequestBody'
+      responses:
+        "200":
+          description: OK response.
+          schema:
+            $ref: '#/definitions/BlogShowResponseBody'
+      schemes:
+      - http
     delete:
       tags:
       - blog
@@ -149,13 +173,13 @@ definitions:
       id:
         type: integer
         description: Id of blog
-        example: 1227376400
+        example: 4002546866
         format: int32
     example:
       comments:
         comments: Est ut.
         id: 2591390728
-      id: 2497136214
+      id: 2753009699
   BlogCreateRequestBody:
     title: BlogCreateRequestBody
     type: object
@@ -176,12 +200,12 @@ definitions:
       id:
         type: integer
         description: ID of a person
-        example: 3102958172
+        example: 1967676887
         format: int32
       name:
         type: string
         description: Name of person
-        example: 8pj
+        example: 2u4
         maxLength: 100
     example:
       comments:
@@ -191,8 +215,8 @@ definitions:
         id: 3163100479
       - comments: Consequatur nesciunt.
         id: 3163100479
-      id: 1462081552
-      name: gb4
+      id: 3407509870
+      name: p9k
   BlogCreateResponseBody:
     title: BlogCreateResponseBody
     type: object
@@ -213,12 +237,12 @@ definitions:
       id:
         type: integer
         description: ID of a person
-        example: 817814709
+        example: 148070491
         format: int32
       name:
         type: string
         description: Name of person
-        example: 4r0
+        example: ynf
         maxLength: 100
     example:
       comments:
@@ -228,8 +252,76 @@ definitions:
         id: 2591390728
       - comments: Est ut.
         id: 2591390728
-      id: 1578833571
-      name: xv5
+      id: 4088298408
+      name: ywv
+  BlogShowRequestBody:
+    title: BlogShowRequestBody
+    type: object
+    properties:
+      comments:
+        type: array
+        items:
+          $ref: '#/definitions/CommentsRequestBody'
+        description: Comments
+        example:
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        maxItems: 100
+      name:
+        type: string
+        description: Name of person
+        example: ft0
+        maxLength: 100
+    example:
+      comments:
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      name: 1mx
+  BlogShowResponseBody:
+    title: BlogShowResponseBody
+    type: object
+    properties:
+      comments:
+        type: array
+        items:
+          $ref: '#/definitions/CommentsResponseBody'
+        description: Comments
+        example:
+        - comments: Est ut.
+          id: 2591390728
+        - comments: Est ut.
+          id: 2591390728
+        - comments: Est ut.
+          id: 2591390728
+        maxItems: 100
+      id:
+        type: integer
+        description: ID of a person
+        example: 662757466
+        format: int32
+      name:
+        type: string
+        description: Name of person
+        example: 4js
+        maxLength: 100
+    example:
+      comments:
+      - comments: Est ut.
+        id: 2591390728
+      - comments: Est ut.
+        id: 2591390728
+      - comments: Est ut.
+        id: 2591390728
+      id: 3369572983
+      name: qgd
   BlogUpdateRequestBody:
     title: BlogUpdateRequestBody
     type: object
@@ -244,10 +336,14 @@ definitions:
           id: 3163100479
         - comments: Consequatur nesciunt.
           id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
+        - comments: Consequatur nesciunt.
+          id: 3163100479
       name:
         type: string
         description: Details of blog to be updated
-        example: Totam molestiae dolorum omnis impedit.
+        example: Labore magnam aperiam esse ut ut.
     example:
       comments:
       - comments: Consequatur nesciunt.
@@ -256,7 +352,9 @@ definitions:
         id: 3163100479
       - comments: Consequatur nesciunt.
         id: 3163100479
-      name: Soluta consequatur beatae soluta voluptatibus aut.
+      - comments: Consequatur nesciunt.
+        id: 3163100479
+      name: Enim architecto consequatur.
     required:
     - name
     - comments
@@ -267,16 +365,16 @@ definitions:
       comments:
         type: string
         description: Comment for the blog
-        example: Iure velit.
+        example: Aut qui reiciendis voluptas.
       id:
         type: integer
         description: ID of a comment
-        example: 4088298408
+        example: 1462081552
         format: int32
     description: Id and comments
     example:
-      comments: Voluptate excepturi totam ducimus.
-      id: 3298756195
+      comments: Placeat rem atque minima a.
+      id: 1303724017
   CommentsResponse:
     title: CommentsResponse
     type: object
@@ -284,16 +382,16 @@ definitions:
       comments:
         type: string
         description: Comment for the blog
-        example: Et ullam nihil.
+        example: Quos distinctio blanditiis cum totam molestiae dolorum.
       id:
         type: integer
         description: ID of a comment
-        example: 2331204871
+        example: 3951813630
         format: int32
     description: Id and comments
     example:
-      comments: Numquam iste et eos voluptatem.
-      id: 784797655
+      comments: Ipsam cupiditate soluta consequatur beatae soluta voluptatibus.
+      id: 3030047410
   CommentsResponseBody:
     title: CommentsResponseBody
     type: object
@@ -301,16 +399,16 @@ definitions:
       comments:
         type: string
         description: Comment for the blog
-        example: At et.
+        example: Voluptatem et voluptas.
       id:
         type: integer
         description: ID of a comment
-        example: 914945699
+        example: 2027675441
         format: int32
     description: Id and comments
     example:
-      comments: Aperiam id corporis voluptatibus inventore.
-      id: 2468836870
+      comments: Sunt asperiores.
+      id: 3102958172
   StoredblogResponse:
     title: 'Mediatype identifier: application/vnd.cellar.stored-blog; view=default'
     type: object
@@ -331,12 +429,12 @@ definitions:
       id:
         type: integer
         description: ID is the unique id of the blog.
-        example: 1303724017
+        example: 1911760497
         format: int32
       name:
         type: string
         description: Name of person
-        example: npp
+        example: z2c
         maxLength: 100
     description: A Storedblog describes a blog retrieved by the storage service. (default
       view)
@@ -348,8 +446,8 @@ definitions:
         id: 1521196964
       - comments: Dolores et.
         id: 1521196964
-      id: 3738307162
-      name: lsc
+      id: 3612083476
+      name: lhk
     required:
     - id
     - name

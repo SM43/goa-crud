@@ -77,5 +77,15 @@ var _ = Service("blog", func() {
 		})
 	})
 
+	Method("show", func() {
+		Description("Show blog based on the id given")
+		Payload(Blog)
+		Result(Blog)
+		HTTP(func() {
+			GET("/{id}")
+			Response(StatusOK)
+		})
+	})
+
 	Files("/openapi.json", "./gen/http/openapi.json")
 })

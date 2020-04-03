@@ -23,6 +23,8 @@ type Service interface {
 	Update(context.Context, *UpdatePayload) (err error)
 	// Add new blog and return its ID.
 	Add(context.Context, *NewComment) (res *NewComment, err error)
+	// Show blog based on the id given
+	Show(context.Context, *Blog) (res *Blog, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -33,7 +35,7 @@ const ServiceName = "blog"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [5]string{"create", "list", "remove", "update", "add"}
+var MethodNames = [6]string{"create", "list", "remove", "update", "add", "show"}
 
 // Blog is the payload type of the blog service create method.
 type Blog struct {
@@ -91,7 +93,7 @@ type Storedblog struct {
 // does not exist.
 type NotFound struct {
 	// ID of missing blog
-	ID string
+	ID uint32
 }
 
 // Error returns an error description.

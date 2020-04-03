@@ -35,3 +35,8 @@ func UpdateBlogPath(id uint32) string {
 func AddBlogPath(id uint32) string {
 	return fmt.Sprintf("/%v/comments", id)
 }
+
+// ShowBlogPath returns the URL path to the blog service show HTTP endpoint.
+func ShowBlogPath(id uint32) string {
+	return fmt.Sprintf("/%v", id)
+}

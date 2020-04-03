@@ -23,7 +23,7 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `blog (create|list|remove|update|add)
+	return `blog (create|list|remove|update|add|show)
 `
 }
 
@@ -77,6 +77,10 @@ func ParseEndpoint(
 		blogAddFlags    = flag.NewFlagSet("add", flag.ExitOnError)
 		blogAddBodyFlag = blogAddFlags.String("body", "REQUIRED", "")
 		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of blog")
+
+		blogShowFlags    = flag.NewFlagSet("show", flag.ExitOnError)
+		blogShowBodyFlag = blogShowFlags.String("body", "REQUIRED", "")
+		blogShowIDFlag   = blogShowFlags.String("id", "REQUIRED", "ID of a person")
 	)
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
@@ -84,6 +88,7 @@ func ParseEndpoint(
 	blogRemoveFlags.Usage = blogRemoveUsage
 	blogUpdateFlags.Usage = blogUpdateUsage
 	blogAddFlags.Usage = blogAddUsage
+	blogShowFlags.Usage = blogShowUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -134,6 +139,9 @@ func ParseEndpoint(
 			case "add":
 				epf = blogAddFlags
 
+			case "show":
+				epf = blogShowFlags
+
 			}
 
 		}
@@ -174,6 +182,9 @@ func ParseEndpoint(
 			case "add":
 				endpoint = c.Add()
 				data, err = blogc.BuildAddPayload(*blogAddBodyFlag, *blogAddIDFlag)
+			case "show":
+				endpoint = c.Show()
+				data, err = blogc.BuildShowPayload(*blogShowBodyFlag, *blogShowIDFlag)
 			}
 		}
 	}
@@ -196,6 +207,7 @@ COMMAND:
     remove: Remove blog from storage
     update: Updating the existing blog
     add: Add new blog and return its ID.
+    show: Show blog based on the id given
 
 Additional help:
     %s blog COMMAND --help
@@ -292,5 +304,33 @@ Example:
          "id": 3163100479
       }
    }' --id 3809683775
+`, os.Args[0])
+}
+
+func blogShowUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] blog show -body JSON -id UINT32
+
+Show blog based on the id given
+    -body JSON: 
+    -id UINT32: ID of a person
+
+Example:
+    `+os.Args[0]+` blog show --body '{
+      "comments": [
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         },
+         {
+            "comments": "Consequatur nesciunt.",
+            "id": 3163100479
+         }
+      ],
+      "name": "4r0"
+   }' --id 919284169
 `, os.Args[0])
 }

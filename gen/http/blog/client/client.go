@@ -32,6 +32,9 @@ type Client struct {
 	// Add Doer is the HTTP client used to make requests to the add endpoint.
 	AddDoer goahttp.Doer
 
+	// Show Doer is the HTTP client used to make requests to the show endpoint.
+	ShowDoer goahttp.Doer
+
 	// RestoreResponseBody controls whether the response bodies are reset after
 	// decoding so they can be read again.
 	RestoreResponseBody bool
@@ -57,6 +60,7 @@ func NewClient(
 		RemoveDoer:          doer,
 		UpdateDoer:          doer,
 		AddDoer:             doer,
+		ShowDoer:            doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
 		host:                host,
@@ -170,6 +174,30 @@ func (c *Client) Add() goa.Endpoint {
 		resp, err := c.AddDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("blog", "add", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// Show returns an endpoint that makes HTTP requests to the blog service show
+// server.
+func (c *Client) Show() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeShowRequest(c.encoder)
+		decodeResponse = DecodeShowResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildShowRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.ShowDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("blog", "show", err)
 		}
 		return decodeResponse(resp)
 	}

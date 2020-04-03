@@ -41,6 +41,15 @@ type AddRequestBody struct {
 	Comments *CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
+// ShowRequestBody is the type of the "blog" service "show" endpoint HTTP
+// request body.
+type ShowRequestBody struct {
+	// Name of person
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// Comments
+	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
+
 // CreateResponseBody is the type of the "blog" service "create" endpoint HTTP
 // response body.
 type CreateResponseBody struct {
@@ -63,6 +72,17 @@ type AddResponseBody struct {
 	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Comment added to an existing blog
 	Comments *CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+}
+
+// ShowResponseBody is the type of the "blog" service "show" endpoint HTTP
+// response body.
+type ShowResponseBody struct {
+	// ID of a person
+	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Name of person
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// Comments
+	Comments []*CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // CommentsRequestBody is used to define fields on request body types.
@@ -140,6 +160,21 @@ func NewAddRequestBody(p *blog.NewComment) *AddRequestBody {
 	return body
 }
 
+// NewShowRequestBody builds the HTTP request body from the payload of the
+// "show" endpoint of the "blog" service.
+func NewShowRequestBody(p *blog.Blog) *ShowRequestBody {
+	body := &ShowRequestBody{
+		Name: p.Name,
+	}
+	if p.Comments != nil {
+		body.Comments = make([]*CommentsRequestBody, len(p.Comments))
+		for i, val := range p.Comments {
+			body.Comments[i] = marshalBlogCommentsToCommentsRequestBody(val)
+		}
+	}
+	return body
+}
+
 // NewCreateBlogCreated builds a "blog" service "create" endpoint result from a
 // HTTP "Created" response.
 func NewCreateBlogCreated(body *CreateResponseBody) *blog.Blog {
@@ -180,8 +215,38 @@ func NewAddNewCommentCreated(body *AddResponseBody) *blog.NewComment {
 	return v
 }
 
+// NewShowBlogOK builds a "blog" service "show" endpoint result from a HTTP
+// "OK" response.
+func NewShowBlogOK(body *ShowResponseBody) *blog.Blog {
+	v := &blog.Blog{
+		ID:   body.ID,
+		Name: body.Name,
+	}
+	if body.Comments != nil {
+		v.Comments = make([]*blog.Comments, len(body.Comments))
+		for i, val := range body.Comments {
+			v.Comments[i] = unmarshalCommentsResponseBodyToBlogComments(val)
+		}
+	}
+
+	return v
+}
+
 // ValidateCreateResponseBody runs the validations defined on CreateResponseBody
 func ValidateCreateResponseBody(body *CreateResponseBody) (err error) {
+	if body.Name != nil {
+		if utf8.RuneCountInString(*body.Name) > 100 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", *body.Name, utf8.RuneCountInString(*body.Name), 100, false))
+		}
+	}
+	if len(body.Comments) > 100 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.comments", body.Comments, len(body.Comments), 100, false))
+	}
+	return
+}
+
+// ValidateShowResponseBody runs the validations defined on ShowResponseBody
+func ValidateShowResponseBody(body *ShowResponseBody) (err error) {
 	if body.Name != nil {
 		if utf8.RuneCountInString(*body.Name) > 100 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", *body.Name, utf8.RuneCountInString(*body.Name), 100, false))

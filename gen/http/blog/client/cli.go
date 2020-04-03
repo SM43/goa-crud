@@ -127,3 +127,37 @@ func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, er
 
 	return v, nil
 }
+
+// BuildShowPayload builds the payload for the blog show endpoint from CLI
+// flags.
+func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error) {
+	var err error
+	var body ShowRequestBody
+	{
+		err = json.Unmarshal([]byte(blogShowBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"4r0\"\n   }'")
+		}
+	}
+	var id uint32
+	{
+		var v uint64
+		v, err = strconv.ParseUint(blogShowID, 10, 32)
+		id = uint32(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for id, must be UINT32")
+		}
+	}
+	v := &blog.Blog{
+		Name: body.Name,
+	}
+	if body.Comments != nil {
+		v.Comments = make([]*blog.Comments, len(body.Comments))
+		for i, val := range body.Comments {
+			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
+		}
+	}
+	v.ID = &id
+
+	return v, nil
+}

@@ -76,3 +76,19 @@ func (s *blogsrvc) Add(ctx context.Context, p *blog.NewComment) (res *blog.NewCo
 
 	return
 }
+
+
+// Show blog based on the id given
+func (s *blogsrvc) Show(ctx context.Context, p *blog.Blog) (res *blog.Blog, err error) {
+	res = &blog.Blog{}
+	s.logger.Print("blog.show")
+
+	for _,singleBlog := range blog_store {
+		if singleBlog.ID == *p.ID {
+			res.ID = &singleBlog.ID
+			res.Name = &singleBlog.Name
+			res.Comments = singleBlog.Comments
+		}
+	}
+	return
+}

@@ -20,16 +20,18 @@ type Client struct {
 	RemoveEndpoint goa.Endpoint
 	UpdateEndpoint goa.Endpoint
 	AddEndpoint    goa.Endpoint
+	ShowEndpoint   goa.Endpoint
 }
 
 // NewClient initializes a "blog" service client given the endpoints.
-func NewClient(create, list, remove, update, add goa.Endpoint) *Client {
+func NewClient(create, list, remove, update, add, show goa.Endpoint) *Client {
 	return &Client{
 		CreateEndpoint: create,
 		ListEndpoint:   list,
 		RemoveEndpoint: remove,
 		UpdateEndpoint: update,
 		AddEndpoint:    add,
+		ShowEndpoint:   show,
 	}
 }
 
@@ -76,4 +78,14 @@ func (c *Client) Add(ctx context.Context, p *NewComment) (res *NewComment, err e
 		return
 	}
 	return ires.(*NewComment), nil
+}
+
+// Show calls the "show" endpoint of the "blog" service.
+func (c *Client) Show(ctx context.Context, p *Blog) (res *Blog, err error) {
+	var ires interface{}
+	ires, err = c.ShowEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*Blog), nil
 }

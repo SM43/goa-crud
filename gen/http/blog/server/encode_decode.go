@@ -204,6 +204,60 @@ func DecodeAddRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Dec
 	}
 }
 
+// EncodeShowResponse returns an encoder for responses returned by the blog
+// show endpoint.
+func EncodeShowResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res := v.(*blog.Blog)
+		enc := encoder(ctx, w)
+		body := NewShowResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeShowRequest returns a decoder for requests sent to the blog show
+// endpoint.
+func DecodeShowRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			body ShowRequestBody
+			err  error
+		)
+		err = decoder(r).Decode(&body)
+		if err != nil {
+			if err == io.EOF {
+				return nil, goa.MissingPayloadError()
+			}
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		err = ValidateShowRequestBody(&body)
+		if err != nil {
+			return nil, err
+		}
+
+		var (
+			id uint32
+
+			params = mux.Vars(r)
+		)
+		{
+			idRaw := params["id"]
+			v, err2 := strconv.ParseUint(idRaw, 10, 32)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("id", idRaw, "unsigned integer"))
+			}
+			id = uint32(v)
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewShowBlog(&body, id)
+
+		return payload, nil
+	}
+}
+
 // unmarshalCommentsRequestBodyToBlogComments builds a value of type
 // *blog.Comments from a value of type *CommentsRequestBody.
 func unmarshalCommentsRequestBodyToBlogComments(v *CommentsRequestBody) *blog.Comments {
