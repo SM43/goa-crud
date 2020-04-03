@@ -72,7 +72,11 @@ func (s *blogsrvc) Add(ctx context.Context, p *blog.NewComment) (res *blog.NewCo
 	res = &blog.NewComment{}
 	s.logger.Print("blog.add")
 
-	blog_store[*p.ID - 1].Comments = append(blog_store[*p.ID - 1].Comments, p.Comments)
+	for i := range blog_store {
+		if blog_store[i].ID == *p.ID {
+			blog_store[i].Comments = append(blog_store[i].Comments, p.Comments)
+		}
+	}
 
 	return
 }
