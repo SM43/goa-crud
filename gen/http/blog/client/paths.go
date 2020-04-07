@@ -40,3 +40,8 @@ func AddBlogPath(id uint32) string {
 func ShowBlogPath(id uint32) string {
 	return fmt.Sprintf("/%v", id)
 }
+
+// OauthBlogPath returns the URL path to the blog service oauth HTTP endpoint.
+func OauthBlogPath() string {
+	return "/oauth/redirect"
+}

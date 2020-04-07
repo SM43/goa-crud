@@ -21,10 +21,11 @@ type Client struct {
 	UpdateEndpoint goa.Endpoint
 	AddEndpoint    goa.Endpoint
 	ShowEndpoint   goa.Endpoint
+	OauthEndpoint  goa.Endpoint
 }
 
 // NewClient initializes a "blog" service client given the endpoints.
-func NewClient(create, list, remove, update, add, show goa.Endpoint) *Client {
+func NewClient(create, list, remove, update, add, show, oauth goa.Endpoint) *Client {
 	return &Client{
 		CreateEndpoint: create,
 		ListEndpoint:   list,
@@ -32,6 +33,7 @@ func NewClient(create, list, remove, update, add, show goa.Endpoint) *Client {
 		UpdateEndpoint: update,
 		AddEndpoint:    add,
 		ShowEndpoint:   show,
+		OauthEndpoint:  oauth,
 	}
 }
 
@@ -88,4 +90,14 @@ func (c *Client) Show(ctx context.Context, p *Blog) (res *Blog, err error) {
 		return
 	}
 	return ires.(*Blog), nil
+}
+
+// Oauth calls the "oauth" endpoint of the "blog" service.
+func (c *Client) Oauth(ctx context.Context) (res string, err error) {
+	var ires interface{}
+	ires, err = c.OauthEndpoint(ctx, nil)
+	if err != nil {
+		return
+	}
+	return ires.(string), nil
 }

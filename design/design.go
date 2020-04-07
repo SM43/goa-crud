@@ -91,5 +91,18 @@ var _ = Service("blog", func() {
 		})
 	})
 
+	Method("oauth", func() {
+		Description("Github authentication to post a new blog")
+		// Payload(func() {
+		// 	Field(1, "token", String, "Access github token")
+		// })
+		Result(String)
+		HTTP(func() {
+			POST("/oauth/redirect")
+			Response(StatusCreated)
+		})
+
+	})
+
 	Files("/openapi.json", "./gen/http/openapi.json")
 })

@@ -25,6 +25,7 @@ type Server struct {
 	Update http.Handler
 	Add    http.Handler
 	Show   http.Handler
+	Oauth  http.Handler
 }
 
 // ErrorNamer is an interface implemented by generated error structs that
@@ -66,6 +67,7 @@ func New(
 			{"Update", "PATCH", "/{id}"},
 			{"Add", "POST", "/{id}/comments"},
 			{"Show", "GET", "/{id}"},
+			{"Oauth", "POST", "/oauth/redirect"},
 			{"./gen/http/openapi.json", "GET", "/openapi.json"},
 		},
 		Create: NewCreateHandler(e.Create, mux, decoder, encoder, errhandler, formatter),
@@ -74,6 +76,7 @@ func New(
 		Update: NewUpdateHandler(e.Update, mux, decoder, encoder, errhandler, formatter),
 		Add:    NewAddHandler(e.Add, mux, decoder, encoder, errhandler, formatter),
 		Show:   NewShowHandler(e.Show, mux, decoder, encoder, errhandler, formatter),
+		Oauth:  NewOauthHandler(e.Oauth, mux, decoder, encoder, errhandler, formatter),
 	}
 }
 
@@ -88,6 +91,7 @@ func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.Update = m(s.Update)
 	s.Add = m(s.Add)
 	s.Show = m(s.Show)
+	s.Oauth = m(s.Oauth)
 }
 
 // Mount configures the mux to serve the blog endpoints.
@@ -98,6 +102,7 @@ func Mount(mux goahttp.Muxer, h *Server) {
 	MountUpdateHandler(mux, h.Update)
 	MountAddHandler(mux, h.Add)
 	MountShowHandler(mux, h.Show)
+	MountOauthHandler(mux, h.Oauth)
 	MountGenHTTPOpenapiJSON(mux, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./gen/http/openapi.json")
 	}))
@@ -390,6 +395,50 @@ func NewShowHandler(
 			return
 		}
 		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountOauthHandler configures the mux to serve the "blog" service "oauth"
+// endpoint.
+func MountOauthHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := h.(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/oauth/redirect", f)
+}
+
+// NewOauthHandler creates a HTTP handler which loads the HTTP request and
+// calls the "blog" service "oauth" endpoint.
+func NewOauthHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		encodeResponse = EncodeOauthResponse(encoder)
+		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "oauth")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
+		var err error
+		res, err := endpoint(ctx, nil)
 		if err != nil {
 			if err := encodeError(ctx, w, err); err != nil {
 				errhandler(ctx, w, err)

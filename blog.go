@@ -4,6 +4,10 @@ import (
 	"context"
 	blog "crud/gen/blog"
 	"log"
+	"fmt"
+	"net/http"
+	"os"
+	"encoding/json"
 )
 
 // blog service example implementation.
@@ -12,7 +16,17 @@ type blogsrvc struct {
 	logger *log.Logger
 }
 
+type OAuthAccessResponse struct {
+	AccessToken string
+}
+
+type Code struct {
+	Token string
+}
+
 var blog_store = make([]*blog.Storedblog, 0)
+
+var token = ""
 
 // NewBlog returns the blog service implementation.
 func NewBlog(logger *log.Logger) blog.Service {
@@ -28,6 +42,8 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 	blog_store = append(blog_store, &item)
 
 	res = (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
+
+
 	return
 }
 
@@ -94,5 +110,42 @@ func (s *blogsrvc) Show(ctx context.Context, p *blog.Blog) (res *blog.Blog, err 
 			res.Comments = singleBlog.Comments
 		}
 	}
+	return
+}
+
+func ghOAuthURLForCode(code string) string {
+	clientID := ""
+	clientSecret := ""
+	return fmt.Sprintf(
+		"https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s",
+		clientID, clientSecret, code)
+}
+
+
+// Github authentication to post a new blog
+func (s *blogsrvc) Oauth(ctx context.Context) (res string, err error) {
+	s.logger.Print("blog.oauth")
+
+	reqURL := ghOAuthURLForCode("")
+
+	req, err := http.NewRequest(http.MethodPost, reqURL, nil)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "could not create HTTP request: %v", err)
+	}
+	req.Header.Set("accept", "application/json")
+
+	// // Send out the HTTP request
+	httpClient := http.Client{}
+	result, err := httpClient.Do(req)
+	if err != nil {
+		println(os.Stdout, "could not send HTTP request: %v", err)
+	}
+
+	// Parse the request body into the `OAuthAccessResponse` struct
+	var t OAuthAccessResponse
+	if err := json.NewDecoder(result.Body).Decode(&t); err != nil {
+		fmt.Fprintf(os.Stdout, "could not parse JSON response: %v", err)
+	}
+
 	return
 }

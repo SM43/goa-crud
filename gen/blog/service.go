@@ -25,6 +25,8 @@ type Service interface {
 	Add(context.Context, *NewComment) (res *NewComment, err error)
 	// Show blog based on the id given
 	Show(context.Context, *Blog) (res *Blog, err error)
+	// Github authentication to post a new blog
+	Oauth(context.Context) (res string, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -35,7 +37,7 @@ const ServiceName = "blog"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [6]string{"create", "list", "remove", "update", "add", "show"}
+var MethodNames = [7]string{"create", "list", "remove", "update", "add", "show", "oauth"}
 
 // Blog is the payload type of the blog service create method.
 type Blog struct {

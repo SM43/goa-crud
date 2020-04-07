@@ -35,6 +35,9 @@ type Client struct {
 	// Show Doer is the HTTP client used to make requests to the show endpoint.
 	ShowDoer goahttp.Doer
 
+	// Oauth Doer is the HTTP client used to make requests to the oauth endpoint.
+	OauthDoer goahttp.Doer
+
 	// RestoreResponseBody controls whether the response bodies are reset after
 	// decoding so they can be read again.
 	RestoreResponseBody bool
@@ -61,6 +64,7 @@ func NewClient(
 		UpdateDoer:          doer,
 		AddDoer:             doer,
 		ShowDoer:            doer,
+		OauthDoer:           doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
 		host:                host,
@@ -198,6 +202,25 @@ func (c *Client) Show() goa.Endpoint {
 		resp, err := c.ShowDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("blog", "show", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// Oauth returns an endpoint that makes HTTP requests to the blog service oauth
+// server.
+func (c *Client) Oauth() goa.Endpoint {
+	var (
+		decodeResponse = DecodeOauthResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildOauthRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.OauthDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("blog", "oauth", err)
 		}
 		return decodeResponse(resp)
 	}

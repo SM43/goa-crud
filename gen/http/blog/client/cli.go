@@ -24,7 +24,7 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"id\": 2998605239,\n      \"name\": \"53p\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"id\": 517667198,\n      \"name\": \"ukt\"\n   }'")
 		}
 	}
 	v := &blog.Blog{
@@ -68,7 +68,7 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 	{
 		err = json.Unmarshal([]byte(blogUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"Et incidunt.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"name\": \"At et.\"\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
@@ -107,7 +107,7 @@ func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, er
 	{
 		err = json.Unmarshal([]byte(blogAddBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Consequatur nesciunt.\",\n         \"id\": 3163100479\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Aliquid provident.\",\n         \"id\": 3075859993\n      }\n   }'")
 		}
 	}
 	var id uint32
@@ -136,7 +136,7 @@ func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error
 	{
 		err = json.Unmarshal([]byte(blogShowBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"4r0\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"name\": \"nfk\"\n   }'")
 		}
 	}
 	var id uint32

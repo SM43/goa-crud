@@ -23,7 +23,7 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `blog (create|list|remove|update|add|show)
+	return `blog (create|list|remove|update|add|show|oauth)
 `
 }
 
@@ -32,20 +32,20 @@ func UsageExamples() string {
 	return os.Args[0] + ` blog create --body '{
       "comments": [
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          }
       ],
-      "id": 2998605239,
-      "name": "53p"
+      "id": 517667198,
+      "name": "ukt"
    }'` + "\n" +
 		""
 }
@@ -81,6 +81,8 @@ func ParseEndpoint(
 		blogShowFlags    = flag.NewFlagSet("show", flag.ExitOnError)
 		blogShowBodyFlag = blogShowFlags.String("body", "REQUIRED", "")
 		blogShowIDFlag   = blogShowFlags.String("id", "REQUIRED", "ID of a person")
+
+		blogOauthFlags = flag.NewFlagSet("oauth", flag.ExitOnError)
 	)
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
@@ -89,6 +91,7 @@ func ParseEndpoint(
 	blogUpdateFlags.Usage = blogUpdateUsage
 	blogAddFlags.Usage = blogAddUsage
 	blogShowFlags.Usage = blogShowUsage
+	blogOauthFlags.Usage = blogOauthUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -142,6 +145,9 @@ func ParseEndpoint(
 			case "show":
 				epf = blogShowFlags
 
+			case "oauth":
+				epf = blogOauthFlags
+
 			}
 
 		}
@@ -185,6 +191,9 @@ func ParseEndpoint(
 			case "show":
 				endpoint = c.Show()
 				data, err = blogc.BuildShowPayload(*blogShowBodyFlag, *blogShowIDFlag)
+			case "oauth":
+				endpoint = c.Oauth()
+				data = nil
 			}
 		}
 	}
@@ -208,6 +217,7 @@ COMMAND:
     update: Updating the existing blog
     add: Add new blog and return its ID.
     show: Show blog based on the id given
+    oauth: Github authentication to post a new blog
 
 Additional help:
     %s blog COMMAND --help
@@ -223,20 +233,20 @@ Example:
     `+os.Args[0]+` blog create --body '{
       "comments": [
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          }
       ],
-      "id": 2998605239,
-      "name": "53p"
+      "id": 517667198,
+      "name": "ukt"
    }'
 `, os.Args[0])
 }
@@ -258,7 +268,7 @@ Remove blog from storage
     -id UINT32: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 3140786710
+    `+os.Args[0]+` blog remove --id 3752768668
 `, os.Args[0])
 }
 
@@ -273,20 +283,20 @@ Example:
     `+os.Args[0]+` blog update --body '{
       "comments": [
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          }
       ],
-      "name": "Et incidunt."
-   }' --id 43896983
+      "name": "At et."
+   }' --id 2346242838
 `, os.Args[0])
 }
 
@@ -300,10 +310,10 @@ Add new blog and return its ID.
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comments": "Consequatur nesciunt.",
-         "id": 3163100479
+         "comments": "Aliquid provident.",
+         "id": 3075859993
       }
-   }' --id 3809683775
+   }' --id 1664673433
 `, os.Args[0])
 }
 
@@ -318,19 +328,29 @@ Example:
     `+os.Args[0]+` blog show --body '{
       "comments": [
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          },
          {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
+            "comments": "Aliquid provident.",
+            "id": 3075859993
          }
       ],
-      "name": "4r0"
-   }' --id 919284169
+      "name": "nfk"
+   }' --id 1803061919
+`, os.Args[0])
+}
+
+func blogOauthUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] blog oauth
+
+Github authentication to post a new blog
+
+Example:
+    `+os.Args[0]+` blog oauth
 `, os.Args[0])
 }
