@@ -50,6 +50,13 @@ type ShowRequestBody struct {
 	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
+// OauthRequestBody is the type of the "blog" service "oauth" endpoint HTTP
+// request body.
+type OauthRequestBody struct {
+	// Access github token
+	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
+}
+
 // CreateResponseBody is the type of the "blog" service "create" endpoint HTTP
 // response body.
 type CreateResponseBody struct {
@@ -171,6 +178,15 @@ func NewShowRequestBody(p *blog.Blog) *ShowRequestBody {
 		for i, val := range p.Comments {
 			body.Comments[i] = marshalBlogCommentsToCommentsRequestBody(val)
 		}
+	}
+	return body
+}
+
+// NewOauthRequestBody builds the HTTP request body from the payload of the
+// "oauth" endpoint of the "blog" service.
+func NewOauthRequestBody(p *blog.OauthPayload) *OauthRequestBody {
+	body := &OauthRequestBody{
+		Token: p.Token,
 	}
 	return body
 }

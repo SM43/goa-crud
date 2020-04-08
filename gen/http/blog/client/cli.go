@@ -24,7 +24,7 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"id\": 517667198,\n      \"name\": \"ukt\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"id\": 2397399195,\n      \"name\": \"gxr\"\n   }'")
 		}
 	}
 	v := &blog.Blog{
@@ -68,7 +68,7 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 	{
 		err = json.Unmarshal([]byte(blogUpdateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"name\": \"At et.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"name\": \"Corporis voluptatibus.\"\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
@@ -107,7 +107,7 @@ func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, er
 	{
 		err = json.Unmarshal([]byte(blogAddBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Aliquid provident.\",\n         \"id\": 3075859993\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Vel nam dolores et minus.\",\n         \"id\": 339538165\n      }\n   }'")
 		}
 	}
 	var id uint32
@@ -136,7 +136,7 @@ func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error
 	{
 		err = json.Unmarshal([]byte(blogShowBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         },\n         {\n            \"comments\": \"Aliquid provident.\",\n            \"id\": 3075859993\n         }\n      ],\n      \"name\": \"nfk\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"name\": \"w7g\"\n   }'")
 		}
 	}
 	var id uint32
@@ -158,6 +158,24 @@ func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error
 		}
 	}
 	v.ID = &id
+
+	return v, nil
+}
+
+// BuildOauthPayload builds the payload for the blog oauth endpoint from CLI
+// flags.
+func BuildOauthPayload(blogOauthBody string) (*blog.OauthPayload, error) {
+	var err error
+	var body OauthRequestBody
+	{
+		err = json.Unmarshal([]byte(blogOauthBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"token\": \"Voluptate excepturi totam ducimus.\"\n   }'")
+		}
+	}
+	v := &blog.OauthPayload{
+		Token: body.Token,
+	}
 
 	return v, nil
 }

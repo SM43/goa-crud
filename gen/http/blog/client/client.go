@@ -211,10 +211,15 @@ func (c *Client) Show() goa.Endpoint {
 // server.
 func (c *Client) Oauth() goa.Endpoint {
 	var (
+		encodeRequest  = EncodeOauthRequest(c.encoder)
 		decodeResponse = DecodeOauthResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
 		req, err := c.BuildOauthRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
 		if err != nil {
 			return nil, err
 		}

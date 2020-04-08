@@ -93,9 +93,9 @@ var _ = Service("blog", func() {
 
 	Method("oauth", func() {
 		Description("Github authentication to post a new blog")
-		// Payload(func() {
-		// 	Field(1, "token", String, "Access github token")
-		// })
+		Payload(func() {
+			Field(1, "token", String, "Access github token")
+		})
 		Result(String)
 		HTTP(func() {
 			POST("/oauth/redirect")

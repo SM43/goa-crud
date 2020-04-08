@@ -105,6 +105,7 @@ func NewShowEndpoint(s Service) goa.Endpoint {
 // of service "blog".
 func NewOauthEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		return s.Oauth(ctx)
+		p := req.(*OauthPayload)
+		return s.Oauth(ctx, p)
 	}
 }

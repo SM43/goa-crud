@@ -26,7 +26,7 @@ type Service interface {
 	// Show blog based on the id given
 	Show(context.Context, *Blog) (res *Blog, err error)
 	// Github authentication to post a new blog
-	Oauth(context.Context) (res string, err error)
+	Oauth(context.Context, *OauthPayload) (res string, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -71,6 +71,12 @@ type NewComment struct {
 	ID *uint32
 	// Comment added to an existing blog
 	Comments *Comments
+}
+
+// OauthPayload is the payload type of the blog service oauth method.
+type OauthPayload struct {
+	// Access github token
+	Token *string
 }
 
 // Id and comments

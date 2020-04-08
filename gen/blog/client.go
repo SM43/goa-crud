@@ -93,9 +93,9 @@ func (c *Client) Show(ctx context.Context, p *Blog) (res *Blog, err error) {
 }
 
 // Oauth calls the "oauth" endpoint of the "blog" service.
-func (c *Client) Oauth(ctx context.Context) (res string, err error) {
+func (c *Client) Oauth(ctx context.Context, p *OauthPayload) (res string, err error) {
 	var ires interface{}
-	ires, err = c.OauthEndpoint(ctx, nil)
+	ires, err = c.OauthEndpoint(ctx, p)
 	if err != nil {
 		return
 	}

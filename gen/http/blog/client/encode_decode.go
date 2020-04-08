@@ -449,6 +449,22 @@ func (c *Client) BuildOauthRequest(ctx context.Context, v interface{}) (*http.Re
 	return req, nil
 }
 
+// EncodeOauthRequest returns an encoder for requests sent to the blog oauth
+// server.
+func EncodeOauthRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+	return func(req *http.Request, v interface{}) error {
+		p, ok := v.(*blog.OauthPayload)
+		if !ok {
+			return goahttp.ErrInvalidType("blog", "oauth", "*blog.OauthPayload", v)
+		}
+		body := NewOauthRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("blog", "oauth", err)
+		}
+		return nil
+	}
+}
+
 // DecodeOauthResponse returns a decoder for responses returned by the blog
 // oauth endpoint. restoreBody controls whether the response body should be
 // restored after having been read.

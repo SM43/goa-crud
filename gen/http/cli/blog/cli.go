@@ -32,20 +32,20 @@ func UsageExamples() string {
 	return os.Args[0] + ` blog create --body '{
       "comments": [
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          }
       ],
-      "id": 517667198,
-      "name": "ukt"
+      "id": 2397399195,
+      "name": "gxr"
    }'` + "\n" +
 		""
 }
@@ -82,7 +82,8 @@ func ParseEndpoint(
 		blogShowBodyFlag = blogShowFlags.String("body", "REQUIRED", "")
 		blogShowIDFlag   = blogShowFlags.String("id", "REQUIRED", "ID of a person")
 
-		blogOauthFlags = flag.NewFlagSet("oauth", flag.ExitOnError)
+		blogOauthFlags    = flag.NewFlagSet("oauth", flag.ExitOnError)
+		blogOauthBodyFlag = blogOauthFlags.String("body", "REQUIRED", "")
 	)
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
@@ -193,7 +194,7 @@ func ParseEndpoint(
 				data, err = blogc.BuildShowPayload(*blogShowBodyFlag, *blogShowIDFlag)
 			case "oauth":
 				endpoint = c.Oauth()
-				data = nil
+				data, err = blogc.BuildOauthPayload(*blogOauthBodyFlag)
 			}
 		}
 	}
@@ -233,20 +234,20 @@ Example:
     `+os.Args[0]+` blog create --body '{
       "comments": [
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          }
       ],
-      "id": 517667198,
-      "name": "ukt"
+      "id": 2397399195,
+      "name": "gxr"
    }'
 `, os.Args[0])
 }
@@ -268,7 +269,7 @@ Remove blog from storage
     -id UINT32: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 3752768668
+    `+os.Args[0]+` blog remove --id 2346242838
 `, os.Args[0])
 }
 
@@ -283,20 +284,20 @@ Example:
     `+os.Args[0]+` blog update --body '{
       "comments": [
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          }
       ],
-      "name": "At et."
-   }' --id 2346242838
+      "name": "Corporis voluptatibus."
+   }' --id 703761309
 `, os.Args[0])
 }
 
@@ -310,10 +311,10 @@ Add new blog and return its ID.
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comments": "Aliquid provident.",
-         "id": 3075859993
+         "comments": "Vel nam dolores et minus.",
+         "id": 339538165
       }
-   }' --id 1664673433
+   }' --id 2027675441
 `, os.Args[0])
 }
 
@@ -328,29 +329,32 @@ Example:
     `+os.Args[0]+` blog show --body '{
       "comments": [
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          },
          {
-            "comments": "Aliquid provident.",
-            "id": 3075859993
+            "comments": "Vel nam dolores et minus.",
+            "id": 339538165
          }
       ],
-      "name": "nfk"
-   }' --id 1803061919
+      "name": "w7g"
+   }' --id 4041756045
 `, os.Args[0])
 }
 
 func blogOauthUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog oauth
+	fmt.Fprintf(os.Stderr, `%s [flags] blog oauth -body JSON
 
 Github authentication to post a new blog
+    -body JSON: 
 
 Example:
-    `+os.Args[0]+` blog oauth
+    `+os.Args[0]+` blog oauth --body '{
+      "token": "Voluptate excepturi totam ducimus."
+   }'
 `, os.Args[0])
 }

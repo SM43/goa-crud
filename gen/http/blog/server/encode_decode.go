@@ -270,6 +270,27 @@ func EncodeOauthResponse(encoder func(context.Context, http.ResponseWriter) goah
 	}
 }
 
+// DecodeOauthRequest returns a decoder for requests sent to the blog oauth
+// endpoint.
+func DecodeOauthRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			body OauthRequestBody
+			err  error
+		)
+		err = decoder(r).Decode(&body)
+		if err != nil {
+			if err == io.EOF {
+				return nil, goa.MissingPayloadError()
+			}
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		payload := NewOauthPayload(&body)
+
+		return payload, nil
+	}
+}
+
 // unmarshalCommentsRequestBodyToBlogComments builds a value of type
 // *blog.Comments from a value of type *CommentsRequestBody.
 func unmarshalCommentsRequestBodyToBlogComments(v *CommentsRequestBody) *blog.Comments {
