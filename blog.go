@@ -3,12 +3,12 @@ package blogapi
 import (
 	"context"
 	blog "crud/gen/blog"
-	"log"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
-	"encoding/json"
-	"io/ioutil"
 )
 
 // blog service example implementation.
@@ -43,7 +43,6 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, er
 	blog_store = append(blog_store, &item)
 
 	res = (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
-
 
 	return
 }
@@ -98,13 +97,12 @@ func (s *blogsrvc) Add(ctx context.Context, p *blog.NewComment) (res *blog.NewCo
 	return
 }
 
-
 // Show blog based on the id given
 func (s *blogsrvc) Show(ctx context.Context, p *blog.Blog) (res *blog.Blog, err error) {
 	res = &blog.Blog{}
 	s.logger.Print("blog.show")
 
-	for _,singleBlog := range blog_store {
+	for _, singleBlog := range blog_store {
 		if singleBlog.ID == *p.ID {
 			res.ID = &singleBlog.ID
 			res.Name = &singleBlog.Name

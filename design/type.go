@@ -60,4 +60,3 @@ var NotFound = Type("NotFound", func() {
 	Field(2, "id", UInt32, "ID of missing blog")
 	Required("id")
 })
-

@@ -38,6 +38,9 @@ type Client struct {
 	// Oauth Doer is the HTTP client used to make requests to the oauth endpoint.
 	OauthDoer goahttp.Doer
 
+	// CORS Doer is the HTTP client used to make requests to the  endpoint.
+	CORSDoer goahttp.Doer
+
 	// RestoreResponseBody controls whether the response bodies are reset after
 	// decoding so they can be read again.
 	RestoreResponseBody bool
@@ -65,6 +68,7 @@ func NewClient(
 		AddDoer:             doer,
 		ShowDoer:            doer,
 		OauthDoer:           doer,
+		CORSDoer:            doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
 		host:                host,

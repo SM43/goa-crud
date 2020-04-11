@@ -2,21 +2,29 @@ package design
 
 import (
 	. "goa.design/goa/v3/dsl"
+	cors "goa.design/plugins/v3/cors/dsl"
 )
 
 var _ = API("blog", func() {
 	Title("Blog Service")
 	Description("Service to perform CRUD operations using goa")
-    Server("blog", func() {
-        Host("localhost", func() {
-            URI("http://localhost:8000")
-            URI("grpc://localhost:8080")
-        })
-    })
+	Server("blog", func() {
+		Host("localhost", func() {
+			URI("http://localhost:8000")
+		})
+	})
 })
 
 var _ = Service("blog", func() {
 	Description("The blog service gives blog details.")
+
+	cors.Origin("/.*local.thaha.xyz/", func() {
+		cors.Headers("X-Shared-Secret")
+		cors.Methods("GET", "POST")
+		cors.Expose("X-Time", "X-Api-Version")
+		cors.MaxAge(100)
+		cors.Credentials()
+	})
 
 	//Method to post new blog
 	Method("create", func() {
@@ -58,7 +66,7 @@ var _ = Service("blog", func() {
 		Description("Updating the existing blog")
 		Payload(func() {
 			Field(1, "id", UInt32, "ID of blog to be updated")
-			Field(2,"name", String, "Details of blog to be updated")
+			Field(2, "name", String, "Details of blog to be updated")
 			Field(3, "comments", ArrayOf(comments), "Comments to be updated")
 			Required("name", "comments")
 		})
