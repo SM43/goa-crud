@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	blogapi "crud"
-	blog "crud/gen/blog"
 	"flag"
 	"fmt"
 	"log"
@@ -12,6 +10,12 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+
+	"github.com/jinzhu/gorm"
+	// Blank for package side effect: loads postgres drivers
+	_ "github.com/lib/pq"
+	blogapi "github.com/sm43/goa-crud"
+	blog "github.com/sm43/goa-crud/gen/blog"
 )
 
 func main() {
@@ -33,13 +37,28 @@ func main() {
 	{
 		logger = log.New(os.Stderr, "[blogapi] ", log.Ltime)
 	}
+	// Database Connection
+	var (
+		db *gorm.DB
+	)
+	{
+		var err error
+		db, err = gorm.Open("postgres", "user=postgres password=postgres dbname=goa_crud sslmode=disable")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("Successful Db Connection..!!")
+		defer db.Close()
+
+		db.AutoMigrate(blogapi.Blog{}, blogapi.Comment{})
+	}
 
 	// Initialize the services.
 	var (
 		blogSvc blog.Service
 	)
 	{
-		blogSvc = blogapi.NewBlog(logger)
+		blogSvc = blogapi.NewBlog(db, logger)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services

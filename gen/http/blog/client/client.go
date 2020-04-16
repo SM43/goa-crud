@@ -3,7 +3,7 @@
 // blog client HTTP transport
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package client
 
@@ -23,20 +23,14 @@ type Client struct {
 	// List Doer is the HTTP client used to make requests to the list endpoint.
 	ListDoer goahttp.Doer
 
-	// Remove Doer is the HTTP client used to make requests to the remove endpoint.
-	RemoveDoer goahttp.Doer
-
-	// Update Doer is the HTTP client used to make requests to the update endpoint.
-	UpdateDoer goahttp.Doer
-
-	// Add Doer is the HTTP client used to make requests to the add endpoint.
-	AddDoer goahttp.Doer
-
 	// Show Doer is the HTTP client used to make requests to the show endpoint.
 	ShowDoer goahttp.Doer
 
-	// Oauth Doer is the HTTP client used to make requests to the oauth endpoint.
-	OauthDoer goahttp.Doer
+	// Remove Doer is the HTTP client used to make requests to the remove endpoint.
+	RemoveDoer goahttp.Doer
+
+	// Add Doer is the HTTP client used to make requests to the add endpoint.
+	AddDoer goahttp.Doer
 
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
@@ -63,11 +57,9 @@ func NewClient(
 	return &Client{
 		CreateDoer:          doer,
 		ListDoer:            doer,
-		RemoveDoer:          doer,
-		UpdateDoer:          doer,
-		AddDoer:             doer,
 		ShowDoer:            doer,
-		OauthDoer:           doer,
+		RemoveDoer:          doer,
+		AddDoer:             doer,
 		CORSDoer:            doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
@@ -120,6 +112,25 @@ func (c *Client) List() goa.Endpoint {
 	}
 }
 
+// Show returns an endpoint that makes HTTP requests to the blog service show
+// server.
+func (c *Client) Show() goa.Endpoint {
+	var (
+		decodeResponse = DecodeShowResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildShowRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.ShowDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("blog", "show", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
 // Remove returns an endpoint that makes HTTP requests to the blog service
 // remove server.
 func (c *Client) Remove() goa.Endpoint {
@@ -134,30 +145,6 @@ func (c *Client) Remove() goa.Endpoint {
 		resp, err := c.RemoveDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("blog", "remove", err)
-		}
-		return decodeResponse(resp)
-	}
-}
-
-// Update returns an endpoint that makes HTTP requests to the blog service
-// update server.
-func (c *Client) Update() goa.Endpoint {
-	var (
-		encodeRequest  = EncodeUpdateRequest(c.encoder)
-		decodeResponse = DecodeUpdateResponse(c.decoder, c.RestoreResponseBody)
-	)
-	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildUpdateRequest(ctx, v)
-		if err != nil {
-			return nil, err
-		}
-		err = encodeRequest(req, v)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := c.UpdateDoer.Do(req)
-		if err != nil {
-			return nil, goahttp.ErrRequestError("blog", "update", err)
 		}
 		return decodeResponse(resp)
 	}
@@ -182,54 +169,6 @@ func (c *Client) Add() goa.Endpoint {
 		resp, err := c.AddDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("blog", "add", err)
-		}
-		return decodeResponse(resp)
-	}
-}
-
-// Show returns an endpoint that makes HTTP requests to the blog service show
-// server.
-func (c *Client) Show() goa.Endpoint {
-	var (
-		encodeRequest  = EncodeShowRequest(c.encoder)
-		decodeResponse = DecodeShowResponse(c.decoder, c.RestoreResponseBody)
-	)
-	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildShowRequest(ctx, v)
-		if err != nil {
-			return nil, err
-		}
-		err = encodeRequest(req, v)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := c.ShowDoer.Do(req)
-		if err != nil {
-			return nil, goahttp.ErrRequestError("blog", "show", err)
-		}
-		return decodeResponse(resp)
-	}
-}
-
-// Oauth returns an endpoint that makes HTTP requests to the blog service oauth
-// server.
-func (c *Client) Oauth() goa.Endpoint {
-	var (
-		encodeRequest  = EncodeOauthRequest(c.encoder)
-		decodeResponse = DecodeOauthResponse(c.decoder, c.RestoreResponseBody)
-	)
-	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildOauthRequest(ctx, v)
-		if err != nil {
-			return nil, err
-		}
-		err = encodeRequest(req, v)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := c.OauthDoer.Do(req)
-		if err != nil {
-			return nil, goahttp.ErrRequestError("blog", "oauth", err)
 		}
 		return decodeResponse(resp)
 	}

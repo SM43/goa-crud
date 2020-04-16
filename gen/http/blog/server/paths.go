@@ -3,7 +3,7 @@
 // HTTP request path constructors for the blog service.
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package server
 
@@ -21,27 +21,17 @@ func ListBlogPath() string {
 	return "/"
 }
 
-// RemoveBlogPath returns the URL path to the blog service remove HTTP endpoint.
-func RemoveBlogPath(id uint32) string {
+// ShowBlogPath returns the URL path to the blog service show HTTP endpoint.
+func ShowBlogPath(id uint) string {
 	return fmt.Sprintf("/%v", id)
 }
 
-// UpdateBlogPath returns the URL path to the blog service update HTTP endpoint.
-func UpdateBlogPath(id uint32) string {
+// RemoveBlogPath returns the URL path to the blog service remove HTTP endpoint.
+func RemoveBlogPath(id uint) string {
 	return fmt.Sprintf("/%v", id)
 }
 
 // AddBlogPath returns the URL path to the blog service add HTTP endpoint.
-func AddBlogPath(id uint32) string {
+func AddBlogPath(id uint) string {
 	return fmt.Sprintf("/%v/comments", id)
-}
-
-// ShowBlogPath returns the URL path to the blog service show HTTP endpoint.
-func ShowBlogPath(id uint32) string {
-	return fmt.Sprintf("/%v", id)
-}
-
-// OauthBlogPath returns the URL path to the blog service oauth HTTP endpoint.
-func OauthBlogPath() string {
-	return "/oauth/redirect"
 }

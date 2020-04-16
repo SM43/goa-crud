@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	blog "crud/gen/blog"
-	blogsvr "crud/gen/http/blog/server"
 	"log"
 	"net/http"
 	"net/url"
@@ -11,6 +9,9 @@ import (
 	"sync"
 	"time"
 
+	blog "github.com/sm43/goa-crud/gen/blog"
+	blogsvr "github.com/sm43/goa-crud/gen/http/blog/server"
+	swaggersvr "github.com/sm43/goa-crud/gen/http/swagger/server"
 	goahttp "goa.design/goa/v3/http"
 	httpmdlwr "goa.design/goa/v3/http/middleware"
 	"goa.design/goa/v3/middleware"
@@ -49,20 +50,24 @@ func handleHTTPServer(ctx context.Context, u *url.URL, blogEndpoints *blog.Endpo
 	// the service input and output data structures to HTTP requests and
 	// responses.
 	var (
-		blogServer *blogsvr.Server
+		blogServer    *blogsvr.Server
+		swaggerServer *swaggersvr.Server
 	)
 	{
 		eh := errorHandler(logger)
 		blogServer = blogsvr.New(blogEndpoints, mux, dec, enc, eh, nil)
+		swaggerServer = swaggersvr.New(nil, mux, dec, enc, eh, nil)
 		if debug {
 			servers := goahttp.Servers{
 				blogServer,
+				swaggerServer,
 			}
 			servers.Use(httpmdlwr.Debug(mux, os.Stdout))
 		}
 	}
 	// Configure the mux.
 	blogsvr.Mount(mux, blogServer)
+	swaggersvr.Mount(mux, swaggerServer)
 
 	// Wrap the multiplexer with additional middlewares. Middlewares mounted
 	// here apply to all the service endpoints.
@@ -76,6 +81,9 @@ func handleHTTPServer(ctx context.Context, u *url.URL, blogEndpoints *blog.Endpo
 	// configure the server as required by your service.
 	srv := &http.Server{Addr: u.Host, Handler: handler}
 	for _, m := range blogServer.Mounts {
+		logger.Printf("HTTP %q mounted on %s %s", m.Method, m.Verb, m.Pattern)
+	}
+	for _, m := range swaggerServer.Mounts {
 		logger.Printf("HTTP %q mounted on %s %s", m.Method, m.Verb, m.Pattern)
 	}
 

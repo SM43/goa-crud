@@ -3,7 +3,7 @@
 // blog client
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package blog
 
@@ -17,87 +17,56 @@ import (
 type Client struct {
 	CreateEndpoint goa.Endpoint
 	ListEndpoint   goa.Endpoint
-	RemoveEndpoint goa.Endpoint
-	UpdateEndpoint goa.Endpoint
-	AddEndpoint    goa.Endpoint
 	ShowEndpoint   goa.Endpoint
-	OauthEndpoint  goa.Endpoint
+	RemoveEndpoint goa.Endpoint
+	AddEndpoint    goa.Endpoint
 }
 
 // NewClient initializes a "blog" service client given the endpoints.
-func NewClient(create, list, remove, update, add, show, oauth goa.Endpoint) *Client {
+func NewClient(create, list, show, remove, add goa.Endpoint) *Client {
 	return &Client{
 		CreateEndpoint: create,
 		ListEndpoint:   list,
-		RemoveEndpoint: remove,
-		UpdateEndpoint: update,
-		AddEndpoint:    add,
 		ShowEndpoint:   show,
-		OauthEndpoint:  oauth,
+		RemoveEndpoint: remove,
+		AddEndpoint:    add,
 	}
 }
 
 // Create calls the "create" endpoint of the "blog" service.
-func (c *Client) Create(ctx context.Context, p *Blog) (res *Blog, err error) {
-	var ires interface{}
-	ires, err = c.CreateEndpoint(ctx, p)
-	if err != nil {
-		return
-	}
-	return ires.(*Blog), nil
+func (c *Client) Create(ctx context.Context, p *Blog) (err error) {
+	_, err = c.CreateEndpoint(ctx, p)
+	return
 }
 
 // List calls the "list" endpoint of the "blog" service.
-func (c *Client) List(ctx context.Context) (res []*Storedblog, err error) {
+func (c *Client) List(ctx context.Context) (res []*StoredBlog, err error) {
 	var ires interface{}
 	ires, err = c.ListEndpoint(ctx, nil)
 	if err != nil {
 		return
 	}
-	return ires.([]*Storedblog), nil
-}
-
-// Remove calls the "remove" endpoint of the "blog" service.
-// Remove may return the following errors:
-//	- "not_found" (type *NotFound): Blog not found
-//	- error: internal error
-func (c *Client) Remove(ctx context.Context, p *RemovePayload) (err error) {
-	_, err = c.RemoveEndpoint(ctx, p)
-	return
-}
-
-// Update calls the "update" endpoint of the "blog" service.
-func (c *Client) Update(ctx context.Context, p *UpdatePayload) (err error) {
-	_, err = c.UpdateEndpoint(ctx, p)
-	return
-}
-
-// Add calls the "add" endpoint of the "blog" service.
-func (c *Client) Add(ctx context.Context, p *NewComment) (res *NewComment, err error) {
-	var ires interface{}
-	ires, err = c.AddEndpoint(ctx, p)
-	if err != nil {
-		return
-	}
-	return ires.(*NewComment), nil
+	return ires.([]*StoredBlog), nil
 }
 
 // Show calls the "show" endpoint of the "blog" service.
-func (c *Client) Show(ctx context.Context, p *Blog) (res *Blog, err error) {
+func (c *Client) Show(ctx context.Context, p *ShowPayload) (res *StoredBlog, err error) {
 	var ires interface{}
 	ires, err = c.ShowEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*Blog), nil
+	return ires.(*StoredBlog), nil
 }
 
-// Oauth calls the "oauth" endpoint of the "blog" service.
-func (c *Client) Oauth(ctx context.Context, p *OauthPayload) (res string, err error) {
-	var ires interface{}
-	ires, err = c.OauthEndpoint(ctx, p)
-	if err != nil {
-		return
-	}
-	return ires.(string), nil
+// Remove calls the "remove" endpoint of the "blog" service.
+func (c *Client) Remove(ctx context.Context, p *RemovePayload) (err error) {
+	_, err = c.RemoveEndpoint(ctx, p)
+	return
+}
+
+// Add calls the "add" endpoint of the "blog" service.
+func (c *Client) Add(ctx context.Context, p *AddPayload) (err error) {
+	_, err = c.AddEndpoint(ctx, p)
+	return
 }

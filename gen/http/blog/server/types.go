@@ -3,179 +3,263 @@
 // blog HTTP server types
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package server
 
 import (
-	blog "crud/gen/blog"
-	"unicode/utf8"
-
+	blog "github.com/sm43/goa-crud/gen/blog"
+	blogviews "github.com/sm43/goa-crud/gen/blog/views"
 	goa "goa.design/goa/v3/pkg"
 )
 
 // CreateRequestBody is the type of the "blog" service "create" endpoint HTTP
 // request body.
 type CreateRequestBody struct {
-	// ID of a person
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// Name of person
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Comments
-	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
-
-// UpdateRequestBody is the type of the "blog" service "update" endpoint HTTP
-// request body.
-type UpdateRequestBody struct {
-	// Details of blog to be updated
-	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Comments to be updated
-	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	// Blog will have multiple comments
+	Comments []*CommentRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // AddRequestBody is the type of the "blog" service "add" endpoint HTTP request
 // body.
 type AddRequestBody struct {
-	// Comment added to an existing blog
-	Comments *CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
-
-// ShowRequestBody is the type of the "blog" service "show" endpoint HTTP
-// request body.
-type ShowRequestBody struct {
-	// Name of person
-	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Comments
-	Comments []*CommentsRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
-
-// OauthRequestBody is the type of the "blog" service "oauth" endpoint HTTP
-// request body.
-type OauthRequestBody struct {
-	// Access github token
-	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
-}
-
-// CreateResponseBody is the type of the "blog" service "create" endpoint HTTP
-// response body.
-type CreateResponseBody struct {
-	// ID of a person
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// Name of person
-	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Comments
-	Comments []*CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	// Comment to be added for a blog
+	Comments *CommentRequestBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
 }
 
 // ListResponseBody is the type of the "blog" service "list" endpoint HTTP
 // response body.
-type ListResponseBody []*StoredblogResponse
-
-// AddResponseBody is the type of the "blog" service "add" endpoint HTTP
-// response body.
-type AddResponseBody struct {
-	// Id of blog
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// Comment added to an existing blog
-	Comments *CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
+type ListResponseBody []*StoredBlogResponse
 
 // ShowResponseBody is the type of the "blog" service "show" endpoint HTTP
 // response body.
 type ShowResponseBody struct {
-	// ID of a person
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// Name of person
-	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
-	// Comments
-	Comments []*CommentsResponseBody `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
-
-// CommentsResponseBody is used to define fields on response body types.
-type CommentsResponseBody struct {
-	// ID of a comment
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// Comment for the blog
-	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
-}
-
-// StoredblogResponse is used to define fields on response body types.
-type StoredblogResponse struct {
-	// ID is the unique id of the blog.
-	ID uint32 `form:"id" json:"id" xml:"id"`
+	// ID is the unique id of the blog
+	ID uint `form:"id" json:"id" xml:"id"`
 	// Name of person
 	Name string `form:"name" json:"name" xml:"name"`
-	// Comments
-	Comments []*CommentsResponse `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	// Blog with multiple comments
+	Comments []*StoredCommentResponseBody `form:"comments" json:"comments" xml:"comments"`
 }
 
-// CommentsResponse is used to define fields on response body types.
-type CommentsResponse struct {
+// CreateDbErrorResponseBody is the type of the "blog" service "create"
+// endpoint HTTP response body for the "db_error" error.
+type CreateDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// ListDbErrorResponseBody is the type of the "blog" service "list" endpoint
+// HTTP response body for the "db_error" error.
+type ListDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// ShowDbErrorResponseBody is the type of the "blog" service "show" endpoint
+// HTTP response body for the "db_error" error.
+type ShowDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// RemoveDbErrorResponseBody is the type of the "blog" service "remove"
+// endpoint HTTP response body for the "db_error" error.
+type RemoveDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// AddDbErrorResponseBody is the type of the "blog" service "add" endpoint HTTP
+// response body for the "db_error" error.
+type AddDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// StoredBlogResponse is used to define fields on response body types.
+type StoredBlogResponse struct {
+	// ID is the unique id of the blog
+	ID uint `form:"id" json:"id" xml:"id"`
+	// Name of person
+	Name string `form:"name" json:"name" xml:"name"`
+	// Blog with multiple comments
+	Comments []*StoredCommentResponse `form:"comments" json:"comments" xml:"comments"`
+}
+
+// StoredCommentResponse is used to define fields on response body types.
+type StoredCommentResponse struct {
 	// ID of a comment
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	ID uint `form:"id" json:"id" xml:"id"`
 	// Comment for the blog
-	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	Comment string `form:"comment" json:"comment" xml:"comment"`
 }
 
-// CommentsRequestBody is used to define fields on request body types.
-type CommentsRequestBody struct {
+// StoredCommentResponseBody is used to define fields on response body types.
+type StoredCommentResponseBody struct {
 	// ID of a comment
-	ID *uint32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	ID uint `form:"id" json:"id" xml:"id"`
 	// Comment for the blog
-	Comments *string `form:"comments,omitempty" json:"comments,omitempty" xml:"comments,omitempty"`
+	Comment string `form:"comment" json:"comment" xml:"comment"`
 }
 
-// NewCreateResponseBody builds the HTTP response body from the result of the
-// "create" endpoint of the "blog" service.
-func NewCreateResponseBody(res *blog.Blog) *CreateResponseBody {
-	body := &CreateResponseBody{
-		ID:   res.ID,
-		Name: res.Name,
-	}
-	if res.Comments != nil {
-		body.Comments = make([]*CommentsResponseBody, len(res.Comments))
-		for i, val := range res.Comments {
-			body.Comments[i] = marshalBlogCommentsToCommentsResponseBody(val)
-		}
-	}
-	return body
+// CommentRequestBody is used to define fields on request body types.
+type CommentRequestBody struct {
+	// ID of a comment
+	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Comment for the blog
+	Comment *string `form:"comment,omitempty" json:"comment,omitempty" xml:"comment,omitempty"`
 }
 
 // NewListResponseBody builds the HTTP response body from the result of the
 // "list" endpoint of the "blog" service.
-func NewListResponseBody(res []*blog.Storedblog) ListResponseBody {
-	body := make([]*StoredblogResponse, len(res))
+func NewListResponseBody(res []*blog.StoredBlog) ListResponseBody {
+	body := make([]*StoredBlogResponse, len(res))
 	for i, val := range res {
-		body[i] = marshalBlogStoredblogToStoredblogResponse(val)
-	}
-	return body
-}
-
-// NewAddResponseBody builds the HTTP response body from the result of the
-// "add" endpoint of the "blog" service.
-func NewAddResponseBody(res *blog.NewComment) *AddResponseBody {
-	body := &AddResponseBody{
-		ID: res.ID,
-	}
-	if res.Comments != nil {
-		body.Comments = marshalBlogCommentsToCommentsResponseBody(res.Comments)
+		body[i] = marshalBlogStoredBlogToStoredBlogResponse(val)
 	}
 	return body
 }
 
 // NewShowResponseBody builds the HTTP response body from the result of the
 // "show" endpoint of the "blog" service.
-func NewShowResponseBody(res *blog.Blog) *ShowResponseBody {
+func NewShowResponseBody(res *blogviews.StoredBlogView) *ShowResponseBody {
 	body := &ShowResponseBody{
-		ID:   res.ID,
-		Name: res.Name,
+		ID:   *res.ID,
+		Name: *res.Name,
 	}
 	if res.Comments != nil {
-		body.Comments = make([]*CommentsResponseBody, len(res.Comments))
+		body.Comments = make([]*StoredCommentResponseBody, len(res.Comments))
 		for i, val := range res.Comments {
-			body.Comments[i] = marshalBlogCommentsToCommentsResponseBody(val)
+			body.Comments[i] = marshalBlogviewsStoredCommentViewToStoredCommentResponseBody(val)
 		}
+	}
+	return body
+}
+
+// NewCreateDbErrorResponseBody builds the HTTP response body from the result
+// of the "create" endpoint of the "blog" service.
+func NewCreateDbErrorResponseBody(res *goa.ServiceError) *CreateDbErrorResponseBody {
+	body := &CreateDbErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewListDbErrorResponseBody builds the HTTP response body from the result of
+// the "list" endpoint of the "blog" service.
+func NewListDbErrorResponseBody(res *goa.ServiceError) *ListDbErrorResponseBody {
+	body := &ListDbErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewShowDbErrorResponseBody builds the HTTP response body from the result of
+// the "show" endpoint of the "blog" service.
+func NewShowDbErrorResponseBody(res *goa.ServiceError) *ShowDbErrorResponseBody {
+	body := &ShowDbErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewRemoveDbErrorResponseBody builds the HTTP response body from the result
+// of the "remove" endpoint of the "blog" service.
+func NewRemoveDbErrorResponseBody(res *goa.ServiceError) *RemoveDbErrorResponseBody {
+	body := &RemoveDbErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewAddDbErrorResponseBody builds the HTTP response body from the result of
+// the "add" endpoint of the "blog" service.
+func NewAddDbErrorResponseBody(res *goa.ServiceError) *AddDbErrorResponseBody {
+	body := &AddDbErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
 	}
 	return body
 }
@@ -183,110 +267,76 @@ func NewShowResponseBody(res *blog.Blog) *ShowResponseBody {
 // NewCreateBlog builds a blog service create endpoint payload.
 func NewCreateBlog(body *CreateRequestBody) *blog.Blog {
 	v := &blog.Blog{
-		ID:   body.ID,
-		Name: body.Name,
+		Name: *body.Name,
 	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = unmarshalCommentsRequestBodyToBlogComments(val)
-		}
+	v.Comments = make([]*blog.Comment, len(body.Comments))
+	for i, val := range body.Comments {
+		v.Comments[i] = unmarshalCommentRequestBodyToBlogComment(val)
 	}
 
 	return v
 }
 
+// NewShowPayload builds a blog service show endpoint payload.
+func NewShowPayload(id uint) *blog.ShowPayload {
+	v := &blog.ShowPayload{}
+	v.ID = id
+
+	return v
+}
+
 // NewRemovePayload builds a blog service remove endpoint payload.
-func NewRemovePayload(id uint32) *blog.RemovePayload {
+func NewRemovePayload(id uint) *blog.RemovePayload {
 	v := &blog.RemovePayload{}
 	v.ID = id
 
 	return v
 }
 
-// NewUpdatePayload builds a blog service update endpoint payload.
-func NewUpdatePayload(body *UpdateRequestBody, id uint32) *blog.UpdatePayload {
-	v := &blog.UpdatePayload{
-		Name: *body.Name,
-	}
-	v.Comments = make([]*blog.Comments, len(body.Comments))
-	for i, val := range body.Comments {
-		v.Comments[i] = unmarshalCommentsRequestBodyToBlogComments(val)
-	}
-	v.ID = &id
-
-	return v
-}
-
-// NewAddNewComment builds a blog service add endpoint payload.
-func NewAddNewComment(body *AddRequestBody, id uint32) *blog.NewComment {
-	v := &blog.NewComment{}
-	if body.Comments != nil {
-		v.Comments = unmarshalCommentsRequestBodyToBlogComments(body.Comments)
-	}
-	v.ID = &id
-
-	return v
-}
-
-// NewShowBlog builds a blog service show endpoint payload.
-func NewShowBlog(body *ShowRequestBody, id uint32) *blog.Blog {
-	v := &blog.Blog{
-		Name: body.Name,
-	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = unmarshalCommentsRequestBodyToBlogComments(val)
-		}
-	}
-	v.ID = &id
-
-	return v
-}
-
-// NewOauthPayload builds a blog service oauth endpoint payload.
-func NewOauthPayload(body *OauthRequestBody) *blog.OauthPayload {
-	v := &blog.OauthPayload{
-		Token: body.Token,
-	}
+// NewAddPayload builds a blog service add endpoint payload.
+func NewAddPayload(body *AddRequestBody, id uint) *blog.AddPayload {
+	v := &blog.AddPayload{}
+	v.Comments = unmarshalCommentRequestBodyToBlogComment(body.Comments)
+	v.ID = id
 
 	return v
 }
 
 // ValidateCreateRequestBody runs the validations defined on CreateRequestBody
 func ValidateCreateRequestBody(body *CreateRequestBody) (err error) {
-	if body.Name != nil {
-		if utf8.RuneCountInString(*body.Name) > 100 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", *body.Name, utf8.RuneCountInString(*body.Name), 100, false))
-		}
-	}
-	if len(body.Comments) > 100 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.comments", body.Comments, len(body.Comments), 100, false))
-	}
-	return
-}
-
-// ValidateUpdateRequestBody runs the validations defined on UpdateRequestBody
-func ValidateUpdateRequestBody(body *UpdateRequestBody) (err error) {
 	if body.Name == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
 	}
 	if body.Comments == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
 	}
+	for _, e := range body.Comments {
+		if e != nil {
+			if err2 := ValidateCommentRequestBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
 	return
 }
 
-// ValidateShowRequestBody runs the validations defined on ShowRequestBody
-func ValidateShowRequestBody(body *ShowRequestBody) (err error) {
-	if body.Name != nil {
-		if utf8.RuneCountInString(*body.Name) > 100 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", *body.Name, utf8.RuneCountInString(*body.Name), 100, false))
+// ValidateAddRequestBody runs the validations defined on AddRequestBody
+func ValidateAddRequestBody(body *AddRequestBody) (err error) {
+	if body.Comments == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
+	}
+	if body.Comments != nil {
+		if err2 := ValidateCommentRequestBody(body.Comments); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
-	if len(body.Comments) > 100 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.comments", body.Comments, len(body.Comments), 100, false))
+	return
+}
+
+// ValidateCommentRequestBody runs the validations defined on CommentRequestBody
+func ValidateCommentRequestBody(body *CommentRequestBody) (err error) {
+	if body.Comment == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("comment", "body"))
 	}
 	return
 }

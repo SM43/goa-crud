@@ -3,30 +3,29 @@
 // blog service
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package blog
 
 import (
 	"context"
+
+	blogviews "github.com/sm43/goa-crud/gen/blog/views"
+	goa "goa.design/goa/v3/pkg"
 )
 
 // The blog service gives blog details.
 type Service interface {
-	// Add new blog and return its ID.
-	Create(context.Context, *Blog) (res *Blog, err error)
-	// List all entries
-	List(context.Context) (res []*Storedblog, err error)
-	// Remove blog from storage
-	Remove(context.Context, *RemovePayload) (err error)
-	// Updating the existing blog
-	Update(context.Context, *UpdatePayload) (err error)
-	// Add new blog and return its ID.
-	Add(context.Context, *NewComment) (res *NewComment, err error)
+	// Add a new blog
+	Create(context.Context, *Blog) (err error)
+	// List all the blogs
+	List(context.Context) (res []*StoredBlog, err error)
 	// Show blog based on the id given
-	Show(context.Context, *Blog) (res *Blog, err error)
-	// Github authentication to post a new blog
-	Oauth(context.Context, *OauthPayload) (res string, err error)
+	Show(context.Context, *ShowPayload) (res *StoredBlog, err error)
+	// Delete a blog
+	Remove(context.Context, *RemovePayload) (err error)
+	// Add a new comment for a blog
+	Add(context.Context, *AddPayload) (err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -37,79 +36,139 @@ const ServiceName = "blog"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [7]string{"create", "list", "remove", "update", "add", "show", "oauth"}
+var MethodNames = [5]string{"create", "list", "show", "remove", "add"}
 
 // Blog is the payload type of the blog service create method.
 type Blog struct {
-	// ID of a person
-	ID *uint32
 	// Name of person
-	Name *string
-	// Comments
-	Comments []*Comments
+	Name string
+	// Blog will have multiple comments
+	Comments []*Comment
+}
+
+// ShowPayload is the payload type of the blog service show method.
+type ShowPayload struct {
+	// ID of the blog to be fetched
+	ID uint
+}
+
+// StoredBlog is the result type of the blog service show method.
+type StoredBlog struct {
+	// ID is the unique id of the blog
+	ID uint
+	// Name of person
+	Name string
+	// Blog with multiple comments
+	Comments []*StoredComment
 }
 
 // RemovePayload is the payload type of the blog service remove method.
 type RemovePayload struct {
 	// ID of blog to remove
-	ID uint32
+	ID uint
 }
 
-// UpdatePayload is the payload type of the blog service update method.
-type UpdatePayload struct {
-	// ID of blog to be updated
-	ID *uint32
-	// Details of blog to be updated
-	Name string
-	// Comments to be updated
-	Comments []*Comments
+// AddPayload is the payload type of the blog service add method.
+type AddPayload struct {
+	// Comment to be added for a blog
+	Comments *Comment
+	// Id of the blog
+	ID uint
 }
 
-// NewComment is the payload type of the blog service add method.
-type NewComment struct {
-	// Id of blog
-	ID *uint32
-	// Comment added to an existing blog
-	Comments *Comments
-}
-
-// OauthPayload is the payload type of the blog service oauth method.
-type OauthPayload struct {
-	// Access github token
-	Token *string
-}
-
-// Id and comments
-type Comments struct {
+// A blog will have multiple comments
+type Comment struct {
 	// ID of a comment
-	ID *uint32
+	ID *uint
 	// Comment for the blog
-	Comments *string
+	Comment string
 }
 
-// A Storedblog describes a blog retrieved by the storage service.
-type Storedblog struct {
-	// ID is the unique id of the blog.
-	ID uint32
-	// Name of person
-	Name string
-	// Comments
-	Comments []*Comments
+// A blog will have multiple comments
+type StoredComment struct {
+	// ID of a comment
+	ID uint
+	// Comment for the blog
+	Comment string
 }
 
-// NotFound is the type returned when attempting to show or delete a blog that
-// does not exist.
-type NotFound struct {
-	// ID of missing blog
-	ID uint32
+// MakeDbError builds a goa.ServiceError from an error.
+func MakeDbError(err error) *goa.ServiceError {
+	return &goa.ServiceError{
+		Name:    "db_error",
+		ID:      goa.NewErrorID(),
+		Message: err.Error(),
+	}
 }
 
-// Error returns an error description.
-func (e *NotFound) Error() string {
-	return "NotFound is the type returned when attempting to show or delete a blog that does not exist."
+// NewStoredBlog initializes result type StoredBlog from viewed result type
+// StoredBlog.
+func NewStoredBlog(vres *blogviews.StoredBlog) *StoredBlog {
+	return newStoredBlog(vres.Projected)
 }
 
-// ErrorName returns "NotFound".
-func (e *NotFound) ErrorName() string {
-	return "not_found"
+// NewViewedStoredBlog initializes viewed result type StoredBlog from result
+// type StoredBlog using the given view.
+func NewViewedStoredBlog(res *StoredBlog, view string) *blogviews.StoredBlog {
+	p := newStoredBlogView(res)
+	return &blogviews.StoredBlog{Projected: p, View: "default"}
+}
+
+// newStoredBlog converts projected type StoredBlog to service type StoredBlog.
+func newStoredBlog(vres *blogviews.StoredBlogView) *StoredBlog {
+	res := &StoredBlog{}
+	if vres.ID != nil {
+		res.ID = *vres.ID
+	}
+	if vres.Name != nil {
+		res.Name = *vres.Name
+	}
+	if vres.Comments != nil {
+		res.Comments = make([]*StoredComment, len(vres.Comments))
+		for i, val := range vres.Comments {
+			res.Comments[i] = transformBlogviewsStoredCommentViewToStoredComment(val)
+		}
+	}
+	return res
+}
+
+// newStoredBlogView projects result type StoredBlog to projected type
+// StoredBlogView using the "default" view.
+func newStoredBlogView(res *StoredBlog) *blogviews.StoredBlogView {
+	vres := &blogviews.StoredBlogView{
+		ID:   &res.ID,
+		Name: &res.Name,
+	}
+	if res.Comments != nil {
+		vres.Comments = make([]*blogviews.StoredCommentView, len(res.Comments))
+		for i, val := range res.Comments {
+			vres.Comments[i] = transformStoredCommentToBlogviewsStoredCommentView(val)
+		}
+	}
+	return vres
+}
+
+// transformBlogviewsStoredCommentViewToStoredComment builds a value of type
+// *StoredComment from a value of type *blogviews.StoredCommentView.
+func transformBlogviewsStoredCommentViewToStoredComment(v *blogviews.StoredCommentView) *StoredComment {
+	if v == nil {
+		return nil
+	}
+	res := &StoredComment{
+		ID:      *v.ID,
+		Comment: *v.Comment,
+	}
+
+	return res
+}
+
+// transformStoredCommentToBlogviewsStoredCommentView builds a value of type
+// *blogviews.StoredCommentView from a value of type *StoredComment.
+func transformStoredCommentToBlogviewsStoredCommentView(v *StoredComment) *blogviews.StoredCommentView {
+	res := &blogviews.StoredCommentView{
+		ID:      &v.ID,
+		Comment: &v.Comment,
+	}
+
+	return res
 }

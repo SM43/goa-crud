@@ -3,16 +3,16 @@
 // blog HTTP client CLI support package
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package client
 
 import (
-	blog "crud/gen/blog"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
+	blog "github.com/sm43/goa-crud/gen/blog"
 	goa "goa.design/goa/v3/pkg"
 )
 
@@ -24,51 +24,7 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"id\": 2397399195,\n      \"name\": \"gxr\"\n   }'")
-		}
-	}
-	v := &blog.Blog{
-		ID:   body.ID,
-		Name: body.Name,
-	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
-		}
-	}
-
-	return v, nil
-}
-
-// BuildRemovePayload builds the payload for the blog remove endpoint from CLI
-// flags.
-func BuildRemovePayload(blogRemoveID string) (*blog.RemovePayload, error) {
-	var err error
-	var id uint32
-	{
-		var v uint64
-		v, err = strconv.ParseUint(blogRemoveID, 10, 32)
-		id = uint32(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
-		}
-	}
-	v := &blog.RemovePayload{}
-	v.ID = id
-
-	return v, nil
-}
-
-// BuildUpdatePayload builds the payload for the blog update endpoint from CLI
-// flags.
-func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.UpdatePayload, error) {
-	var err error
-	var body UpdateRequestBody
-	{
-		err = json.Unmarshal([]byte(blogUpdateBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"name\": \"Corporis voluptatibus.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         }\n      ],\n      \"name\": \"Aspernatur consequatur nesciunt voluptas adipisci.\"\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
@@ -77,105 +33,87 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 			return nil, err
 		}
 	}
-	var id uint32
-	{
-		var v uint64
-		v, err = strconv.ParseUint(blogUpdateID, 10, 32)
-		id = uint32(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
-		}
-	}
-	v := &blog.UpdatePayload{
+	v := &blog.Blog{
 		Name: body.Name,
 	}
 	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
+		v.Comments = make([]*blog.Comment, len(body.Comments))
 		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
+			v.Comments[i] = marshalCommentRequestBodyToBlogComment(val)
 		}
 	}
-	v.ID = &id
-
-	return v, nil
-}
-
-// BuildAddPayload builds the payload for the blog add endpoint from CLI flags.
-func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, error) {
-	var err error
-	var body AddRequestBody
-	{
-		err = json.Unmarshal([]byte(blogAddBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Vel nam dolores et minus.\",\n         \"id\": 339538165\n      }\n   }'")
-		}
-	}
-	var id uint32
-	{
-		var v uint64
-		v, err = strconv.ParseUint(blogAddID, 10, 32)
-		id = uint32(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
-		}
-	}
-	v := &blog.NewComment{}
-	if body.Comments != nil {
-		v.Comments = marshalCommentsRequestBodyToBlogComments(body.Comments)
-	}
-	v.ID = &id
 
 	return v, nil
 }
 
 // BuildShowPayload builds the payload for the blog show endpoint from CLI
 // flags.
-func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error) {
+func BuildShowPayload(blogShowID string) (*blog.ShowPayload, error) {
 	var err error
-	var body ShowRequestBody
-	{
-		err = json.Unmarshal([]byte(blogShowBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         },\n         {\n            \"comments\": \"Vel nam dolores et minus.\",\n            \"id\": 339538165\n         }\n      ],\n      \"name\": \"w7g\"\n   }'")
-		}
-	}
-	var id uint32
+	var id uint
 	{
 		var v uint64
-		v, err = strconv.ParseUint(blogShowID, 10, 32)
-		id = uint32(v)
+		v, err = strconv.ParseUint(blogShowID, 10, 64)
+		id = uint(v)
 		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
 		}
 	}
-	v := &blog.Blog{
-		Name: body.Name,
-	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
-		}
-	}
-	v.ID = &id
+	v := &blog.ShowPayload{}
+	v.ID = id
 
 	return v, nil
 }
 
-// BuildOauthPayload builds the payload for the blog oauth endpoint from CLI
+// BuildRemovePayload builds the payload for the blog remove endpoint from CLI
 // flags.
-func BuildOauthPayload(blogOauthBody string) (*blog.OauthPayload, error) {
+func BuildRemovePayload(blogRemoveID string) (*blog.RemovePayload, error) {
 	var err error
-	var body OauthRequestBody
+	var id uint
 	{
-		err = json.Unmarshal([]byte(blogOauthBody), &body)
+		var v uint64
+		v, err = strconv.ParseUint(blogRemoveID, 10, 64)
+		id = uint(v)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"token\": \"Voluptate excepturi totam ducimus.\"\n   }'")
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
 		}
 	}
-	v := &blog.OauthPayload{
-		Token: body.Token,
+	v := &blog.RemovePayload{}
+	v.ID = id
+
+	return v, nil
+}
+
+// BuildAddPayload builds the payload for the blog add endpoint from CLI flags.
+func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.AddPayload, error) {
+	var err error
+	var body AddRequestBody
+	{
+		err = json.Unmarshal([]byte(blogAddBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Aspernatur aliquid.\",\n         \"id\": 7401541539814418533\n      }\n   }'")
+		}
+		if body.Comments == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
+	var id uint
+	{
+		var v uint64
+		v, err = strconv.ParseUint(blogAddID, 10, 64)
+		id = uint(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
+		}
+	}
+	v := &blog.AddPayload{}
+	if body.Comments != nil {
+		v.Comments = marshalCommentRequestBodyToBlogComment(body.Comments)
+	}
+	v.ID = id
 
 	return v, nil
 }

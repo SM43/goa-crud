@@ -3,16 +3,16 @@
 // blog HTTP server
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package server
 
 import (
 	"context"
-	blog "crud/gen/blog"
 	"net/http"
 	"regexp"
 
+	blog "github.com/sm43/goa-crud/gen/blog"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 	"goa.design/plugins/v3/cors"
@@ -23,11 +23,9 @@ type Server struct {
 	Mounts []*MountPoint
 	Create http.Handler
 	List   http.Handler
-	Remove http.Handler
-	Update http.Handler
-	Add    http.Handler
 	Show   http.Handler
-	Oauth  http.Handler
+	Remove http.Handler
+	Add    http.Handler
 	CORS   http.Handler
 }
 
@@ -66,25 +64,18 @@ func New(
 		Mounts: []*MountPoint{
 			{"Create", "POST", "/"},
 			{"List", "GET", "/"},
-			{"Remove", "DELETE", "/{id}"},
-			{"Update", "PATCH", "/{id}"},
-			{"Add", "POST", "/{id}/comments"},
 			{"Show", "GET", "/{id}"},
-			{"Oauth", "POST", "/oauth/redirect"},
+			{"Remove", "DELETE", "/{id}"},
+			{"Add", "PATCH", "/{id}/comments"},
 			{"CORS", "OPTIONS", "/"},
 			{"CORS", "OPTIONS", "/{id}"},
 			{"CORS", "OPTIONS", "/{id}/comments"},
-			{"CORS", "OPTIONS", "/oauth/redirect"},
-			{"CORS", "OPTIONS", "/openapi.json"},
-			{"./gen/http/openapi.json", "GET", "/openapi.json"},
 		},
 		Create: NewCreateHandler(e.Create, mux, decoder, encoder, errhandler, formatter),
 		List:   NewListHandler(e.List, mux, decoder, encoder, errhandler, formatter),
-		Remove: NewRemoveHandler(e.Remove, mux, decoder, encoder, errhandler, formatter),
-		Update: NewUpdateHandler(e.Update, mux, decoder, encoder, errhandler, formatter),
-		Add:    NewAddHandler(e.Add, mux, decoder, encoder, errhandler, formatter),
 		Show:   NewShowHandler(e.Show, mux, decoder, encoder, errhandler, formatter),
-		Oauth:  NewOauthHandler(e.Oauth, mux, decoder, encoder, errhandler, formatter),
+		Remove: NewRemoveHandler(e.Remove, mux, decoder, encoder, errhandler, formatter),
+		Add:    NewAddHandler(e.Add, mux, decoder, encoder, errhandler, formatter),
 		CORS:   NewCORSHandler(),
 	}
 }
@@ -96,11 +87,9 @@ func (s *Server) Service() string { return "blog" }
 func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.Create = m(s.Create)
 	s.List = m(s.List)
-	s.Remove = m(s.Remove)
-	s.Update = m(s.Update)
-	s.Add = m(s.Add)
 	s.Show = m(s.Show)
-	s.Oauth = m(s.Oauth)
+	s.Remove = m(s.Remove)
+	s.Add = m(s.Add)
 	s.CORS = m(s.CORS)
 }
 
@@ -108,15 +97,10 @@ func (s *Server) Use(m func(http.Handler) http.Handler) {
 func Mount(mux goahttp.Muxer, h *Server) {
 	MountCreateHandler(mux, h.Create)
 	MountListHandler(mux, h.List)
-	MountRemoveHandler(mux, h.Remove)
-	MountUpdateHandler(mux, h.Update)
-	MountAddHandler(mux, h.Add)
 	MountShowHandler(mux, h.Show)
-	MountOauthHandler(mux, h.Oauth)
+	MountRemoveHandler(mux, h.Remove)
+	MountAddHandler(mux, h.Add)
 	MountCORSHandler(mux, h.CORS)
-	MountGenHTTPOpenapiJSON(mux, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./gen/http/openapi.json")
-	}))
 }
 
 // MountCreateHandler configures the mux to serve the "blog" service "create"
@@ -144,7 +128,7 @@ func NewCreateHandler(
 	var (
 		decodeRequest  = DecodeCreateRequest(mux, decoder)
 		encodeResponse = EncodeCreateResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+		encodeError    = EncodeCreateError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
@@ -194,7 +178,7 @@ func NewListHandler(
 ) http.Handler {
 	var (
 		encodeResponse = EncodeListResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+		encodeError    = EncodeListError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
@@ -202,159 +186,6 @@ func NewListHandler(
 		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
 		var err error
 		res, err := endpoint(ctx, nil)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		if err := encodeResponse(ctx, w, res); err != nil {
-			errhandler(ctx, w, err)
-		}
-	})
-}
-
-// MountRemoveHandler configures the mux to serve the "blog" service "remove"
-// endpoint.
-func MountRemoveHandler(mux goahttp.Muxer, h http.Handler) {
-	f, ok := handleBlogOrigin(h).(http.HandlerFunc)
-	if !ok {
-		f = func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		}
-	}
-	mux.Handle("DELETE", "/{id}", f)
-}
-
-// NewRemoveHandler creates a HTTP handler which loads the HTTP request and
-// calls the "blog" service "remove" endpoint.
-func NewRemoveHandler(
-	endpoint goa.Endpoint,
-	mux goahttp.Muxer,
-	decoder func(*http.Request) goahttp.Decoder,
-	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
-	errhandler func(context.Context, http.ResponseWriter, error),
-	formatter func(err error) goahttp.Statuser,
-) http.Handler {
-	var (
-		decodeRequest  = DecodeRemoveRequest(mux, decoder)
-		encodeResponse = EncodeRemoveResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
-	)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "remove")
-		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
-		payload, err := decodeRequest(r)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		res, err := endpoint(ctx, payload)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		if err := encodeResponse(ctx, w, res); err != nil {
-			errhandler(ctx, w, err)
-		}
-	})
-}
-
-// MountUpdateHandler configures the mux to serve the "blog" service "update"
-// endpoint.
-func MountUpdateHandler(mux goahttp.Muxer, h http.Handler) {
-	f, ok := handleBlogOrigin(h).(http.HandlerFunc)
-	if !ok {
-		f = func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		}
-	}
-	mux.Handle("PATCH", "/{id}", f)
-}
-
-// NewUpdateHandler creates a HTTP handler which loads the HTTP request and
-// calls the "blog" service "update" endpoint.
-func NewUpdateHandler(
-	endpoint goa.Endpoint,
-	mux goahttp.Muxer,
-	decoder func(*http.Request) goahttp.Decoder,
-	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
-	errhandler func(context.Context, http.ResponseWriter, error),
-	formatter func(err error) goahttp.Statuser,
-) http.Handler {
-	var (
-		decodeRequest  = DecodeUpdateRequest(mux, decoder)
-		encodeResponse = EncodeUpdateResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
-	)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "update")
-		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
-		payload, err := decodeRequest(r)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		res, err := endpoint(ctx, payload)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		if err := encodeResponse(ctx, w, res); err != nil {
-			errhandler(ctx, w, err)
-		}
-	})
-}
-
-// MountAddHandler configures the mux to serve the "blog" service "add"
-// endpoint.
-func MountAddHandler(mux goahttp.Muxer, h http.Handler) {
-	f, ok := handleBlogOrigin(h).(http.HandlerFunc)
-	if !ok {
-		f = func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		}
-	}
-	mux.Handle("POST", "/{id}/comments", f)
-}
-
-// NewAddHandler creates a HTTP handler which loads the HTTP request and calls
-// the "blog" service "add" endpoint.
-func NewAddHandler(
-	endpoint goa.Endpoint,
-	mux goahttp.Muxer,
-	decoder func(*http.Request) goahttp.Decoder,
-	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
-	errhandler func(context.Context, http.ResponseWriter, error),
-	formatter func(err error) goahttp.Statuser,
-) http.Handler {
-	var (
-		decodeRequest  = DecodeAddRequest(mux, decoder)
-		encodeResponse = EncodeAddResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
-	)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "add")
-		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
-		payload, err := decodeRequest(r)
-		if err != nil {
-			if err := encodeError(ctx, w, err); err != nil {
-				errhandler(ctx, w, err)
-			}
-			return
-		}
-		res, err := endpoint(ctx, payload)
 		if err != nil {
 			if err := encodeError(ctx, w, err); err != nil {
 				errhandler(ctx, w, err)
@@ -392,7 +223,7 @@ func NewShowHandler(
 	var (
 		decodeRequest  = DecodeShowRequest(mux, decoder)
 		encodeResponse = EncodeShowResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+		encodeError    = EncodeShowError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
@@ -418,21 +249,21 @@ func NewShowHandler(
 	})
 }
 
-// MountOauthHandler configures the mux to serve the "blog" service "oauth"
+// MountRemoveHandler configures the mux to serve the "blog" service "remove"
 // endpoint.
-func MountOauthHandler(mux goahttp.Muxer, h http.Handler) {
+func MountRemoveHandler(mux goahttp.Muxer, h http.Handler) {
 	f, ok := handleBlogOrigin(h).(http.HandlerFunc)
 	if !ok {
 		f = func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("POST", "/oauth/redirect", f)
+	mux.Handle("DELETE", "/{id}", f)
 }
 
-// NewOauthHandler creates a HTTP handler which loads the HTTP request and
-// calls the "blog" service "oauth" endpoint.
-func NewOauthHandler(
+// NewRemoveHandler creates a HTTP handler which loads the HTTP request and
+// calls the "blog" service "remove" endpoint.
+func NewRemoveHandler(
 	endpoint goa.Endpoint,
 	mux goahttp.Muxer,
 	decoder func(*http.Request) goahttp.Decoder,
@@ -441,13 +272,13 @@ func NewOauthHandler(
 	formatter func(err error) goahttp.Statuser,
 ) http.Handler {
 	var (
-		decodeRequest  = DecodeOauthRequest(mux, decoder)
-		encodeResponse = EncodeOauthResponse(encoder)
-		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+		decodeRequest  = DecodeRemoveRequest(mux, decoder)
+		encodeResponse = EncodeRemoveResponse(encoder)
+		encodeError    = EncodeRemoveError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "oauth")
+		ctx = context.WithValue(ctx, goa.MethodKey, "remove")
 		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
 		payload, err := decodeRequest(r)
 		if err != nil {
@@ -469,10 +300,55 @@ func NewOauthHandler(
 	})
 }
 
-// MountGenHTTPOpenapiJSON configures the mux to serve GET request made to
-// "/openapi.json".
-func MountGenHTTPOpenapiJSON(mux goahttp.Muxer, h http.Handler) {
-	mux.Handle("GET", "/openapi.json", handleBlogOrigin(h).ServeHTTP)
+// MountAddHandler configures the mux to serve the "blog" service "add"
+// endpoint.
+func MountAddHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := handleBlogOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("PATCH", "/{id}/comments", f)
+}
+
+// NewAddHandler creates a HTTP handler which loads the HTTP request and calls
+// the "blog" service "add" endpoint.
+func NewAddHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeAddRequest(mux, decoder)
+		encodeResponse = EncodeAddResponse(encoder)
+		encodeError    = EncodeAddError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "add")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "blog")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
 }
 
 // MountCORSHandler configures the mux to serve the CORS endpoints for the
@@ -488,8 +364,6 @@ func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	mux.Handle("OPTIONS", "/", f)
 	mux.Handle("OPTIONS", "/{id}", f)
 	mux.Handle("OPTIONS", "/{id}/comments", f)
-	mux.Handle("OPTIONS", "/oauth/redirect", f)
-	mux.Handle("OPTIONS", "/openapi.json", f)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.
@@ -502,7 +376,7 @@ func NewCORSHandler() http.Handler {
 // handleBlogOrigin applies the CORS response headers corresponding to the
 // origin for the service blog.
 func handleBlogOrigin(h http.Handler) http.Handler {
-	spec0 := regexp.MustCompile(".*local.thaha.xyz")
+	spec0 := regexp.MustCompile(".*localhost")
 	origHndlr := h.(http.HandlerFunc)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
