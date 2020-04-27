@@ -25,11 +25,11 @@ func NewBlog(db *gorm.DB, logger *log.Logger) blog.Service {
 func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (err error) {
 
 	blog := &Blog{Name: p.Name}
-	s.db.Create(blog)
+	err = s.db.Create(blog).Error
 	for _, comment := range p.Comments {
 		s.db.Model(&blog).Association("Comments").Append(&Comment{Text: comment.Comment})
 	}
-	return
+	return err
 }
 
 // List all entries

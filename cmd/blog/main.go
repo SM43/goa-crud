@@ -49,7 +49,7 @@ func main() {
 		}
 		fmt.Println("Successful Db Connection..!!")
 		defer db.Close()
-
+		db.LogMode(true)
 		db.AutoMigrate(blogapi.Blog{}, blogapi.Comment{})
 	}
 
