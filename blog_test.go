@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
 	"testing"
-	"time"
 
 	// blank
 	"github.com/go-testfixtures/testfixtures/v3"
@@ -18,32 +16,65 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var newLock sync.Mutex
+type TestConfig struct {
+	db      *gorm.DB
+	closeDb func() error
+	blogSvc blog.Service
+}
 
-// NewGormDB ...
-func NewGormDB() (*gorm.DB, func() error) {
-	newLock.Lock()
-	defer newLock.Unlock()
-	defaultDb, err := sql.Open("postgres", "user=postgres password=postgres dbname=goa_crud sslmode=disable")
-	if err != nil {
-		fmt.Println("Failed")
+var test TestConfig
+
+func TestMain(m *testing.M) {
+
+	var err error
+	if test, err = ConnectDb(); err != nil {
+		fmt.Println("Failed to Connect to Db. Details - ", err)
+		return
 	}
-	testDbName := fmt.Sprintf("%s_test_%d", "goa_crud", time.Now().UnixNano())
+	if err = LoadFixture(test.db, "fixtures"); err != nil {
+		fmt.Println("Failed to load Data. Details - ", err)
+		return
+	}
+	logger := log.New(os.Stderr, "[blogapi] ", log.Ltime)
+	test.blogSvc = NewBlog(test.db, logger)
 
+	defer os.Exit(m.Run())
+	defer test.closeDb()
+
+}
+
+// ConnectDb ...
+func ConnectDb() (TestConfig, error) {
+
+	// Connect to Application Db
+	appDBName := "goa_crud"
+	appDbString := fmt.Sprintf("user=postgres password=postgres dbname=%s sslmode=disable", appDBName)
+	defaultDb, err := sql.Open("postgres", appDbString)
+	if err != nil {
+		return TestConfig{}, err
+	}
+
+	// Create a test db - appDbname_test
+	testDbName := fmt.Sprintf("%s_test", appDBName)
+	_, err = defaultDb.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDbName))
+	if err != nil {
+		return TestConfig{}, err
+	}
 	_, err = defaultDb.Exec(fmt.Sprintf("CREATE DATABASE %s;", testDbName))
 	if err != nil {
-		fmt.Println("Failed to create db", err)
+		return TestConfig{}, err
 	}
 
+	// Connect to test db
 	testDbString := fmt.Sprintf("user=postgres password=postgres dbname=%s sslmode=disable", testDbName)
 	db, err := gorm.Open("postgres", testDbString)
 	if err != nil {
-		fmt.Println("Failed to connect")
+		return TestConfig{}, err
 	}
 
 	db.AutoMigrate(Blog{}, Comment{})
 
-	closeFn := func() error {
+	closeDb := func() error {
 		_ = db.Close()
 		_, err = defaultDb.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDbName))
 		if err != nil {
@@ -52,11 +83,11 @@ func NewGormDB() (*gorm.DB, func() error) {
 		}
 		return defaultDb.Close()
 	}
-	return db, closeFn
+	return TestConfig{db: db, closeDb: closeDb}, nil
 }
 
-// LoadFixtureDirs ...
-func LoadFixtureDirs(db *gorm.DB, fixtureDir string) error {
+// LoadFixture ...
+func LoadFixture(db *gorm.DB, fixtureDir string) error {
 
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db.DB()),
@@ -64,37 +95,32 @@ func LoadFixtureDirs(db *gorm.DB, fixtureDir string) error {
 		testfixtures.Directory(fixtureDir),
 	)
 	if err != nil {
-		fmt.Println("Failed to create new Fixture", err)
+		return err
 	}
 	if err := fixtures.Load(); err != nil {
-		fmt.Println("Can't Load Data", err)
+		return err
 	}
 	return nil
 }
 
 func TestBlog_Create(t *testing.T) {
-	t.Run("create blog", func(t *testing.T) {
-		t.Parallel()
-		db, closeDb := NewGormDB()
-		defer closeDb()
-		logger := log.New(os.Stderr, "[blogapi] ", log.Ltime)
-		blogSvc := NewBlog(db, logger)
-		b := &blog.Blog{Name: "shivam"}
-		err := blogSvc.Create(context.Background(), b)
-		assert.NoError(t, err)
-	})
+	LoadFixture(test.db, "fixtures")
+	c := []*blog.Comment{
+		{
+			Comment: "",
+		},
+		{
+			Comment: "A",
+		},
+	}
+	b := &blog.Blog{Name: "Blog 1", Comments: c}
+	err := test.blogSvc.Create(context.Background(), b)
+	assert.NoError(t, err)
 }
 
 func TestBlog_List(t *testing.T) {
-	t.Run("read blogs", func(t *testing.T) {
-		t.Parallel()
-		db, closeDb := NewGormDB()
-		LoadFixtureDirs(db, "fixtures")
-		defer closeDb()
-		logger := log.New(os.Stderr, "[blogapi] ", log.Ltime)
-		blogSvc := NewBlog(db, logger)
-		blogList, err := blogSvc.List(context.Background())
-		assert.NoError(t, err)
-		assert.Equal(t, len(blogList), 3)
-	})
+	LoadFixture(test.db, "fixtures")
+	blogList, err := test.blogSvc.List(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, len(blogList), 3)
 }

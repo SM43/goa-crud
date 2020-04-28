@@ -27,7 +27,9 @@ func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (err error) {
 	blog := &Blog{Name: p.Name}
 	err = s.db.Create(blog).Error
 	for _, comment := range p.Comments {
-		s.db.Model(&blog).Association("Comments").Append(&Comment{Text: comment.Comment})
+		if err := s.db.Model(&blog).Association("Comments").Append(&Comment{Text: comment.Comment}).Error; err != nil {
+			return err
+		}
 	}
 	return err
 }
