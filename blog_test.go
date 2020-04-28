@@ -103,24 +103,65 @@ func LoadFixture(db *gorm.DB, fixtureDir string) error {
 	return nil
 }
 
-func TestBlog_Create(t *testing.T) {
+// Create a blog
+func Test_Create(t *testing.T) {
 	LoadFixture(test.db, "fixtures")
 	c := []*blog.Comment{
-		{
-			Comment: "",
-		},
-		{
-			Comment: "A",
-		},
+		{Comment: "2019"},
+		{Comment: "Movie"},
 	}
-	b := &blog.Blog{Name: "Blog 1", Comments: c}
+	b := &blog.Blog{Name: "Karwaan", Comments: c}
 	err := test.blogSvc.Create(context.Background(), b)
 	assert.NoError(t, err)
+
+	// If the Blog already exist, expect error
+	err = test.blogSvc.Create(context.Background(), b)
+	assert.Error(t, err)
+
 }
 
-func TestBlog_List(t *testing.T) {
+// Fetch the list of the blog
+func Test_List(t *testing.T) {
 	LoadFixture(test.db, "fixtures")
 	blogList, err := test.blogSvc.List(context.Background())
 	assert.NoError(t, err)
 	assert.Equal(t, len(blogList), 3)
+}
+
+// Fetch a blog using ID
+func Test_Show(t *testing.T) {
+	LoadFixture(test.db, "fixtures")
+	payload := &blog.ShowPayload{ID: 1}
+	blog, err := test.blogSvc.Show(context.Background(), payload)
+	assert.NoError(t, err)
+	assert.Equal(t, blog.Name, "Why A is not B")
+	assert.Equal(t, blog.Comments[0].Comment, "Bcoz A is A and B is B")
+
+	// If the blog does not exist, expect error
+	payload.ID = 11
+	blog, err = test.blogSvc.Show(context.Background(), payload)
+	assert.Error(t, err)
+}
+
+// Remove a blog using ID / If a blog doesn't exit it doesn't return error
+// TODO: Check for record in code
+func Test_Remove(t *testing.T) {
+	LoadFixture(test.db, "fixtures")
+	removePayload := &blog.RemovePayload{ID: 1}
+	err := test.blogSvc.Remove(context.Background(), removePayload)
+	assert.NoError(t, err)
+}
+
+// Add a comment to a blog using ID
+func Test_Add(t *testing.T) {
+	LoadFixture(test.db, "fixtures")
+	c := blog.Comment{Comment: "2019"}
+	addPayload := &blog.AddPayload{ID: 1, Comments: &c}
+	err := test.blogSvc.Add(context.Background(), addPayload)
+	assert.NoError(t, err)
+
+	// If the blog does not exist, expect error
+	addPayload.ID = 11
+	err = test.blogSvc.Add(context.Background(), addPayload)
+	assert.Error(t, err)
 }
