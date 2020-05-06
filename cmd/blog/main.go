@@ -13,9 +13,11 @@ import (
 
 	"github.com/jinzhu/gorm"
 	// Blank for package side effect: loads postgres drivers
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	blogapi "github.com/sm43/goa-crud"
 	blog "github.com/sm43/goa-crud/gen/blog"
+	oauth "github.com/sm43/goa-crud/gen/oauth"
 )
 
 func main() {
@@ -37,6 +39,14 @@ func main() {
 	{
 		logger = log.New(os.Stderr, "[blogapi] ", log.Ltime)
 	}
+
+	{
+		// loads values from .env into the system
+		if err := godotenv.Load(); err != nil {
+			log.Print("No .env file found")
+			return
+		}
+	}
 	// Database Connection
 	var (
 		db *gorm.DB
@@ -55,18 +65,22 @@ func main() {
 
 	// Initialize the services.
 	var (
-		blogSvc blog.Service
+		oauthSvc oauth.Service
+		blogSvc  blog.Service
 	)
 	{
+		oauthSvc = blogapi.NewOauth(db, logger)
 		blogSvc = blogapi.NewBlog(db, logger)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
 	// potentially running in different processes.
 	var (
-		blogEndpoints *blog.Endpoints
+		oauthEndpoints *oauth.Endpoints
+		blogEndpoints  *blog.Endpoints
 	)
 	{
+		oauthEndpoints = oauth.NewEndpoints(oauthSvc)
 		blogEndpoints = blog.NewEndpoints(blogSvc)
 	}
 
@@ -107,7 +121,7 @@ func main() {
 			} else if u.Port() == "" {
 				u.Host += ":80"
 			}
-			handleHTTPServer(ctx, u, blogEndpoints, &wg, errc, logger, *dbgF)
+			handleHTTPServer(ctx, u, oauthEndpoints, blogEndpoints, &wg, errc, logger, *dbgF)
 		}
 
 	default:

@@ -39,9 +39,13 @@ func (c *Client) BuildCreateRequest(ctx context.Context, v interface{}) (*http.R
 // server.
 func EncodeCreateRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
 	return func(req *http.Request, v interface{}) error {
-		p, ok := v.(*blog.Blog)
+		p, ok := v.(*blog.CreatePayload)
 		if !ok {
-			return goahttp.ErrInvalidType("blog", "create", "*blog.Blog", v)
+			return goahttp.ErrInvalidType("blog", "create", "*blog.CreatePayload", v)
+		}
+		{
+			head := p.Auth
+			req.Header.Set("Authorization", head)
 		}
 		body := NewCreateRequestBody(p)
 		if err := encoder(req).Encode(&body); err != nil {
@@ -56,6 +60,7 @@ func EncodeCreateRequest(encoder func(*http.Request) goahttp.Encoder) func(*http
 // restored after having been read.
 // DecodeCreateResponse may return the following errors:
 //	- "db_error" (type *goa.ServiceError): http.StatusInternalServerError
+//	- "invalid-token" (type *goa.ServiceError): http.StatusUnauthorized
 //	- error: internal error
 func DecodeCreateResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
 	return func(resp *http.Response) (interface{}, error) {
@@ -88,6 +93,20 @@ func DecodeCreateResponse(decoder func(*http.Response) goahttp.Decoder, restoreB
 				return nil, goahttp.ErrValidationError("blog", "create", err)
 			}
 			return nil, NewCreateDbError(&body)
+		case http.StatusUnauthorized:
+			var (
+				body CreateInvalidTokenResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("blog", "create", err)
+			}
+			err = ValidateCreateInvalidTokenResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("blog", "create", err)
+			}
+			return nil, NewCreateInvalidToken(&body)
 		default:
 			body, _ := ioutil.ReadAll(resp.Body)
 			return nil, goahttp.ErrInvalidResponse("blog", "create", resp.StatusCode, string(body))
@@ -410,12 +429,44 @@ func DecodeAddResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody
 	}
 }
 
+// marshalBlogBlogToBlogRequestBody builds a value of type *BlogRequestBody
+// from a value of type *blog.Blog.
+func marshalBlogBlogToBlogRequestBody(v *blog.Blog) *BlogRequestBody {
+	res := &BlogRequestBody{
+		Name: v.Name,
+	}
+	if v.Comments != nil {
+		res.Comments = make([]*CommentRequestBody, len(v.Comments))
+		for i, val := range v.Comments {
+			res.Comments[i] = marshalBlogCommentToCommentRequestBody(val)
+		}
+	}
+
+	return res
+}
+
 // marshalBlogCommentToCommentRequestBody builds a value of type
 // *CommentRequestBody from a value of type *blog.Comment.
 func marshalBlogCommentToCommentRequestBody(v *blog.Comment) *CommentRequestBody {
 	res := &CommentRequestBody{
 		ID:      v.ID,
 		Comment: v.Comment,
+	}
+
+	return res
+}
+
+// marshalBlogRequestBodyToBlogBlog builds a value of type *blog.Blog from a
+// value of type *BlogRequestBody.
+func marshalBlogRequestBodyToBlogBlog(v *BlogRequestBody) *blog.Blog {
+	res := &blog.Blog{
+		Name: v.Name,
+	}
+	if v.Comments != nil {
+		res.Comments = make([]*blog.Comment, len(v.Comments))
+		for i, val := range v.Comments {
+			res.Comments[i] = marshalCommentRequestBodyToBlogComment(val)
+		}
 	}
 
 	return res

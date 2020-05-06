@@ -6,15 +6,22 @@ var _ = Service("blog", func() {
 	Description("The blog service gives blog details.")
 
 	Error("db_error", ErrorResult, "Unable to process db request")
+	Error("invalid-token", ErrorResult, "User token not valid")
 
 	//Method to post new blog
 	Method("create", func() {
 		Description("Add a new blog")
-		Payload(Blog)
+		Payload(func() {
+			Attribute("blog", Blog, "Adding a new blog")
+			Attribute("auth", String, "Access github token")
+			Required("auth", "blog")
+		})
 		HTTP(func() {
 			POST("/")
+			Header("auth:Authorization") // JWT token passed in "X-Authorization" header
 			Response(StatusCreated)
 			Response("db_error", StatusInternalServerError)
+			Response("invalid-token", StatusUnauthorized)
 		})
 	})
 

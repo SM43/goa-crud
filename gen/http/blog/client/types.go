@@ -16,10 +16,8 @@ import (
 // CreateRequestBody is the type of the "blog" service "create" endpoint HTTP
 // request body.
 type CreateRequestBody struct {
-	// Name of person
-	Name string `form:"name" json:"name" xml:"name"`
-	// Blog will have multiple comments
-	Comments []*CommentRequestBody `form:"comments" json:"comments" xml:"comments"`
+	// Adding a new blog
+	Blog *BlogRequestBody `form:"blog" json:"blog" xml:"blog"`
 }
 
 // AddRequestBody is the type of the "blog" service "add" endpoint HTTP request
@@ -47,6 +45,24 @@ type ShowResponseBody struct {
 // CreateDbErrorResponseBody is the type of the "blog" service "create"
 // endpoint HTTP response body for the "db_error" error.
 type CreateDbErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// CreateInvalidTokenResponseBody is the type of the "blog" service "create"
+// endpoint HTTP response body for the "invalid-token" error.
+type CreateInvalidTokenResponseBody struct {
 	// Name is the name of this class of errors.
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -134,6 +150,14 @@ type AddDbErrorResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
+// BlogRequestBody is used to define fields on request body types.
+type BlogRequestBody struct {
+	// Name of person
+	Name string `form:"name" json:"name" xml:"name"`
+	// Blog will have multiple comments
+	Comments []*CommentRequestBody `form:"comments" json:"comments" xml:"comments"`
+}
+
 // CommentRequestBody is used to define fields on request body types.
 type CommentRequestBody struct {
 	// ID of a comment
@@ -170,15 +194,10 @@ type StoredCommentResponseBody struct {
 
 // NewCreateRequestBody builds the HTTP request body from the payload of the
 // "create" endpoint of the "blog" service.
-func NewCreateRequestBody(p *blog.Blog) *CreateRequestBody {
-	body := &CreateRequestBody{
-		Name: p.Name,
-	}
-	if p.Comments != nil {
-		body.Comments = make([]*CommentRequestBody, len(p.Comments))
-		for i, val := range p.Comments {
-			body.Comments[i] = marshalBlogCommentToCommentRequestBody(val)
-		}
+func NewCreateRequestBody(p *blog.CreatePayload) *CreateRequestBody {
+	body := &CreateRequestBody{}
+	if p.Blog != nil {
+		body.Blog = marshalBlogBlogToBlogRequestBody(p.Blog)
 	}
 	return body
 }
@@ -195,6 +214,21 @@ func NewAddRequestBody(p *blog.AddPayload) *AddRequestBody {
 
 // NewCreateDbError builds a blog service create endpoint db_error error.
 func NewCreateDbError(body *CreateDbErrorResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewCreateInvalidToken builds a blog service create endpoint invalid-token
+// error.
+func NewCreateInvalidToken(body *CreateInvalidTokenResponseBody) *goa.ServiceError {
 	v := &goa.ServiceError{
 		Name:      *body.Name,
 		ID:        *body.ID,
@@ -312,6 +346,30 @@ func ValidateCreateDbErrorResponseBody(body *CreateDbErrorResponseBody) (err err
 	return
 }
 
+// ValidateCreateInvalidTokenResponseBody runs the validations defined on
+// create_invalid-token_response_body
+func ValidateCreateInvalidTokenResponseBody(body *CreateInvalidTokenResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
 // ValidateListDbErrorResponseBody runs the validations defined on
 // list_db_error_response_body
 func ValidateListDbErrorResponseBody(body *ListDbErrorResponseBody) (err error) {
@@ -404,6 +462,14 @@ func ValidateAddDbErrorResponseBody(body *AddDbErrorResponseBody) (err error) {
 	}
 	if body.Fault == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateBlogRequestBody runs the validations defined on BlogRequestBody
+func ValidateBlogRequestBody(body *BlogRequestBody) (err error) {
+	if body.Comments == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
 	}
 	return
 }

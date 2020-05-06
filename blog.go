@@ -22,11 +22,17 @@ func NewBlog(db *gorm.DB, logger *log.Logger) blog.Service {
 }
 
 // Add new blog and return its ID.
-func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (err error) {
+func (s *blogsrvc) Create(ctx context.Context, p *blog.CreatePayload) (err error) {
 
-	blog := &Blog{Name: p.Name}
+	err = VerifyJWT(p.Auth)
+	if err != nil {
+		s.logger.Println("Invalid user", err.Error())
+		return blog.MakeInvalidToken(fmt.Errorf(err.Error()))
+	}
+
+	blog := &Blog{Name: p.Blog.Name}
 	err = s.db.Create(blog).Error
-	for _, comment := range p.Comments {
+	for _, comment := range p.Blog.Comments {
 		if err := s.db.Model(&blog).Association("Comments").Append(&Comment{Text: comment.Comment}).Error; err != nil {
 			return err
 		}

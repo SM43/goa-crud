@@ -10,7 +10,7 @@ var _ = API("blog", func() {
 	Description("Service to perform CRUD operations using goa")
 	Meta("swagger:example", "false")
 	Server("blog", func() {
-		Services("blog", "swagger")
+		Services("oauth", "blog", "swagger")
 		Host("localhost", func() {
 			URI("http://localhost:8000")
 		})

@@ -44,8 +44,4 @@ var Comment = Type("Comment", func() {
 	Required("comment")
 })
 
-var NotFound = Type("NotFound", func() {
-	Description("NotFound is the type returned when attempting to show or delete a blog that does not exist.")
-	Field(2, "id", UInt32, "ID of missing blog")
-	Required("id")
-})
+

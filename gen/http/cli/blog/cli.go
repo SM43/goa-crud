@@ -14,6 +14,7 @@ import (
 	"os"
 
 	blogc "github.com/sm43/goa-crud/gen/http/blog/client"
+	oauthc "github.com/sm43/goa-crud/gen/http/oauth/client"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -23,33 +24,31 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `blog (create|list|show|remove|add)
+	return `oauth oauth
+blog (create|list|show|remove|add)
 `
 }
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` blog create --body '{
-      "comments": [
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         }
-      ],
-      "name": "Aspernatur consequatur nesciunt voluptas adipisci."
+	return os.Args[0] + ` oauth oauth --body '{
+      "token": "Aliquid provident."
    }'` + "\n" +
+		os.Args[0] + ` blog create --body '{
+      "blog": {
+         "comments": [
+            {
+               "comment": "Eligendi quam eveniet non eaque omnis et.",
+               "id": 5853931440448808029
+            },
+            {
+               "comment": "Eligendi quam eveniet non eaque omnis et.",
+               "id": 5853931440448808029
+            }
+         ],
+         "name": "Soluta aut dolorum fuga rerum et et."
+      }
+   }' --auth "Ea ratione at et."` + "\n" +
 		""
 }
 
@@ -63,10 +62,16 @@ func ParseEndpoint(
 	restore bool,
 ) (goa.Endpoint, interface{}, error) {
 	var (
+		oauthFlags = flag.NewFlagSet("oauth", flag.ContinueOnError)
+
+		oauthOauthFlags    = flag.NewFlagSet("oauth", flag.ExitOnError)
+		oauthOauthBodyFlag = oauthOauthFlags.String("body", "REQUIRED", "")
+
 		blogFlags = flag.NewFlagSet("blog", flag.ContinueOnError)
 
 		blogCreateFlags    = flag.NewFlagSet("create", flag.ExitOnError)
 		blogCreateBodyFlag = blogCreateFlags.String("body", "REQUIRED", "")
+		blogCreateAuthFlag = blogCreateFlags.String("auth", "REQUIRED", "")
 
 		blogListFlags = flag.NewFlagSet("list", flag.ExitOnError)
 
@@ -80,6 +85,9 @@ func ParseEndpoint(
 		blogAddBodyFlag = blogAddFlags.String("body", "REQUIRED", "")
 		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of the blog")
 	)
+	oauthFlags.Usage = oauthUsage
+	oauthOauthFlags.Usage = oauthOauthUsage
+
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
 	blogListFlags.Usage = blogListUsage
@@ -102,6 +110,8 @@ func ParseEndpoint(
 	{
 		svcn = flag.Arg(0)
 		switch svcn {
+		case "oauth":
+			svcf = oauthFlags
 		case "blog":
 			svcf = blogFlags
 		default:
@@ -119,6 +129,13 @@ func ParseEndpoint(
 	{
 		epn = svcf.Arg(0)
 		switch svcn {
+		case "oauth":
+			switch epn {
+			case "oauth":
+				epf = oauthOauthFlags
+
+			}
+
 		case "blog":
 			switch epn {
 			case "create":
@@ -158,12 +175,19 @@ func ParseEndpoint(
 	)
 	{
 		switch svcn {
+		case "oauth":
+			c := oauthc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "oauth":
+				endpoint = c.Oauth()
+				data, err = oauthc.BuildOauthPayload(*oauthOauthBodyFlag)
+			}
 		case "blog":
 			c := blogc.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
 			case "create":
 				endpoint = c.Create()
-				data, err = blogc.BuildCreatePayload(*blogCreateBodyFlag)
+				data, err = blogc.BuildCreatePayload(*blogCreateBodyFlag, *blogCreateAuthFlag)
 			case "list":
 				endpoint = c.List()
 				data = nil
@@ -186,6 +210,32 @@ func ParseEndpoint(
 	return endpoint, data, nil
 }
 
+// oauthUsage displays the usage of the oauth command and its subcommands.
+func oauthUsage() {
+	fmt.Fprintf(os.Stderr, `The oauth service authorise user to access other APIs
+Usage:
+    %s [globalflags] oauth COMMAND [flags]
+
+COMMAND:
+    oauth: Github authentication to post a new blog
+
+Additional help:
+    %s oauth COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func oauthOauthUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] oauth oauth -body JSON
+
+Github authentication to post a new blog
+    -body JSON: 
+
+Example:
+    `+os.Args[0]+` oauth oauth --body '{
+      "token": "Aliquid provident."
+   }'
+`, os.Args[0])
+}
+
 // blogUsage displays the usage of the blog command and its subcommands.
 func blogUsage() {
 	fmt.Fprintf(os.Stderr, `The blog service gives blog details.
@@ -204,33 +254,28 @@ Additional help:
 `, os.Args[0], os.Args[0])
 }
 func blogCreateUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog create -body JSON
+	fmt.Fprintf(os.Stderr, `%s [flags] blog create -body JSON -auth STRING
 
 Add a new blog
     -body JSON: 
+    -auth STRING: 
 
 Example:
     `+os.Args[0]+` blog create --body '{
-      "comments": [
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         },
-         {
-            "comment": "Aspernatur aliquid.",
-            "id": 7401541539814418533
-         }
-      ],
-      "name": "Aspernatur consequatur nesciunt voluptas adipisci."
-   }'
+      "blog": {
+         "comments": [
+            {
+               "comment": "Eligendi quam eveniet non eaque omnis et.",
+               "id": 5853931440448808029
+            },
+            {
+               "comment": "Eligendi quam eveniet non eaque omnis et.",
+               "id": 5853931440448808029
+            }
+         ],
+         "name": "Soluta aut dolorum fuga rerum et et."
+      }
+   }' --auth "Ea ratione at et."
 `, os.Args[0])
 }
 
@@ -251,7 +296,7 @@ Show blog based on the id given
     -id UINT: ID of the blog to be fetched
 
 Example:
-    `+os.Args[0]+` blog show --id 7488792028481161981
+    `+os.Args[0]+` blog show --id 2757763773622452166
 `, os.Args[0])
 }
 
@@ -262,7 +307,7 @@ Delete a blog
     -id UINT: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 8779553980399303872
+    `+os.Args[0]+` blog remove --id 16522289313636908332
 `, os.Args[0])
 }
 
@@ -276,9 +321,9 @@ Add a new comment for a blog
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comment": "Aspernatur aliquid.",
-         "id": 7401541539814418533
+         "comment": "Eligendi quam eveniet non eaque omnis et.",
+         "id": 5853931440448808029
       }
-   }' --id 11146128720830241554
+   }' --id 2169912030633346718
 `, os.Args[0])
 }

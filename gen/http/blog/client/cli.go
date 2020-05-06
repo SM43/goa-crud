@@ -18,30 +18,35 @@ import (
 
 // BuildCreatePayload builds the payload for the blog create endpoint from CLI
 // flags.
-func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
+func BuildCreatePayload(blogCreateBody string, blogCreateAuth string) (*blog.CreatePayload, error) {
 	var err error
 	var body CreateRequestBody
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         },\n         {\n            \"comment\": \"Aspernatur aliquid.\",\n            \"id\": 7401541539814418533\n         }\n      ],\n      \"name\": \"Aspernatur consequatur nesciunt voluptas adipisci.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"blog\": {\n         \"comments\": [\n            {\n               \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n               \"id\": 5853931440448808029\n            },\n            {\n               \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n               \"id\": 5853931440448808029\n            }\n         ],\n         \"name\": \"Soluta aut dolorum fuga rerum et et.\"\n      }\n   }'")
 		}
-		if body.Comments == nil {
-			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
+		if body.Blog == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("blog", "body"))
+		}
+		if body.Blog != nil {
+			if err2 := ValidateBlogRequestBody(body.Blog); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
 		}
 		if err != nil {
 			return nil, err
 		}
 	}
-	v := &blog.Blog{
-		Name: body.Name,
+	var auth string
+	{
+		auth = blogCreateAuth
 	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comment, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentRequestBodyToBlogComment(val)
-		}
+	v := &blog.CreatePayload{}
+	if body.Blog != nil {
+		v.Blog = marshalBlogRequestBodyToBlogBlog(body.Blog)
 	}
+	v.Auth = auth
 
 	return v, nil
 }
@@ -91,7 +96,7 @@ func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.AddPayload, er
 	{
 		err = json.Unmarshal([]byte(blogAddBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Aspernatur aliquid.\",\n         \"id\": 7401541539814418533\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n         \"id\": 5853931440448808029\n      }\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))

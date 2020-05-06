@@ -47,7 +47,18 @@ func DecodeCreateRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.
 		if err != nil {
 			return nil, err
 		}
-		payload := NewCreateBlog(&body)
+
+		var (
+			auth string
+		)
+		auth = r.Header.Get("Authorization")
+		if auth == "" {
+			err = goa.MergeErrors(err, goa.MissingFieldError("Authorization", "header"))
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewCreatePayload(&body, auth)
 
 		return payload, nil
 	}
@@ -74,6 +85,18 @@ func EncodeCreateError(encoder func(context.Context, http.ResponseWriter) goahtt
 			}
 			w.Header().Set("goa-error", "db_error")
 			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		case "invalid-token":
+			res := v.(*goa.ServiceError)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewCreateInvalidTokenResponseBody(res)
+			}
+			w.Header().Set("goa-error", "invalid-token")
+			w.WriteHeader(http.StatusUnauthorized)
 			return enc.Encode(body)
 		default:
 			return encodeError(ctx, w, v)
@@ -329,6 +352,20 @@ func EncodeAddError(encoder func(context.Context, http.ResponseWriter) goahttp.E
 			return encodeError(ctx, w, v)
 		}
 	}
+}
+
+// unmarshalBlogRequestBodyToBlogBlog builds a value of type *blog.Blog from a
+// value of type *BlogRequestBody.
+func unmarshalBlogRequestBodyToBlogBlog(v *BlogRequestBody) *blog.Blog {
+	res := &blog.Blog{
+		Name: *v.Name,
+	}
+	res.Comments = make([]*blog.Comment, len(v.Comments))
+	for i, val := range v.Comments {
+		res.Comments[i] = unmarshalCommentRequestBodyToBlogComment(val)
+	}
+
+	return res
 }
 
 // unmarshalCommentRequestBodyToBlogComment builds a value of type

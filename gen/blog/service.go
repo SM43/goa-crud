@@ -17,7 +17,7 @@ import (
 // The blog service gives blog details.
 type Service interface {
 	// Add a new blog
-	Create(context.Context, *Blog) (err error)
+	Create(context.Context, *CreatePayload) (err error)
 	// List all the blogs
 	List(context.Context) (res []*StoredBlog, err error)
 	// Show blog based on the id given
@@ -38,12 +38,12 @@ const ServiceName = "blog"
 // MethodKey key.
 var MethodNames = [5]string{"create", "list", "show", "remove", "add"}
 
-// Blog is the payload type of the blog service create method.
-type Blog struct {
-	// Name of person
-	Name string
-	// Blog will have multiple comments
-	Comments []*Comment
+// CreatePayload is the payload type of the blog service create method.
+type CreatePayload struct {
+	// Adding a new blog
+	Blog *Blog
+	// Access github token
+	Auth string
 }
 
 // ShowPayload is the payload type of the blog service show method.
@@ -76,6 +76,14 @@ type AddPayload struct {
 	ID uint
 }
 
+// A Blog describes a blog retrieved by the storage service.
+type Blog struct {
+	// Name of person
+	Name string
+	// Blog will have multiple comments
+	Comments []*Comment
+}
+
 // A blog will have multiple comments
 type Comment struct {
 	// ID of a comment
@@ -96,6 +104,15 @@ type StoredComment struct {
 func MakeDbError(err error) *goa.ServiceError {
 	return &goa.ServiceError{
 		Name:    "db_error",
+		ID:      goa.NewErrorID(),
+		Message: err.Error(),
+	}
+}
+
+// MakeInvalidToken builds a goa.ServiceError from an error.
+func MakeInvalidToken(err error) *goa.ServiceError {
+	return &goa.ServiceError{
+		Name:    "invalid-token",
 		ID:      goa.NewErrorID(),
 		Message: err.Error(),
 	}

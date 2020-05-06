@@ -46,7 +46,7 @@ func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
 // "create" of service "blog".
 func NewCreateEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*Blog)
+		p := req.(*CreatePayload)
 		return nil, s.Create(ctx, p)
 	}
 }
