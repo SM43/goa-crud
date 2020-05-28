@@ -22,7 +22,7 @@ func BuildOauthPayload(oauthOauthBody string) (*oauth.OauthPayload, error) {
 	{
 		err = json.Unmarshal([]byte(oauthOauthBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"token\": \"Aliquid provident.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"token\": \"Non eaque omnis.\"\n   }'")
 		}
 	}
 	v := &oauth.OauthPayload{

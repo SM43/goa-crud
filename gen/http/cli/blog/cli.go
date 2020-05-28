@@ -26,29 +26,42 @@ import (
 func UsageCommands() string {
 	return `oauth oauth
 blog (create|list|show|remove|add)
+user (create|list)
 `
 }
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
 	return os.Args[0] + ` oauth oauth --body '{
-      "token": "Aliquid provident."
+      "token": "Non eaque omnis."
    }'` + "\n" +
 		os.Args[0] + ` blog create --body '{
       "blog": {
          "comments": [
             {
-               "comment": "Eligendi quam eveniet non eaque omnis et.",
-               "id": 5853931440448808029
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
             },
             {
-               "comment": "Eligendi quam eveniet non eaque omnis et.",
-               "id": 5853931440448808029
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
+            },
+            {
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
             }
          ],
-         "name": "Soluta aut dolorum fuga rerum et et."
+         "name": "Sed et aut voluptatem et voluptas."
       }
-   }' --auth "Ea ratione at et."` + "\n" +
+   }' --auth "Ullam voluptate excepturi totam ducimus."` + "\n" +
+		os.Args[0] + ` user create --body '{
+      "user": {
+         "age": 2340686031751127884,
+         "class": "Minus soluta aut dolorum fuga.",
+         "id": 9607508899083994649,
+         "name": "Provident perspiciatis accusamus vel nam."
+      }
+   }' --auth "Esse ut ut occaecati."` + "\n" +
 		""
 }
 
@@ -84,6 +97,14 @@ func ParseEndpoint(
 		blogAddFlags    = flag.NewFlagSet("add", flag.ExitOnError)
 		blogAddBodyFlag = blogAddFlags.String("body", "REQUIRED", "")
 		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of the blog")
+
+		userFlags = flag.NewFlagSet("user", flag.ContinueOnError)
+
+		userCreateFlags    = flag.NewFlagSet("create", flag.ExitOnError)
+		userCreateBodyFlag = userCreateFlags.String("body", "REQUIRED", "")
+		userCreateAuthFlag = userCreateFlags.String("auth", "REQUIRED", "")
+
+		userListFlags = flag.NewFlagSet("list", flag.ExitOnError)
 	)
 	oauthFlags.Usage = oauthUsage
 	oauthOauthFlags.Usage = oauthOauthUsage
@@ -94,6 +115,10 @@ func ParseEndpoint(
 	blogShowFlags.Usage = blogShowUsage
 	blogRemoveFlags.Usage = blogRemoveUsage
 	blogAddFlags.Usage = blogAddUsage
+
+	userFlags.Usage = userUsage
+	userCreateFlags.Usage = userCreateUsage
+	userListFlags.Usage = userListUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -114,6 +139,8 @@ func ParseEndpoint(
 			svcf = oauthFlags
 		case "blog":
 			svcf = blogFlags
+		case "user":
+			svcf = userFlags
 		default:
 			return nil, nil, fmt.Errorf("unknown service %q", svcn)
 		}
@@ -152,6 +179,16 @@ func ParseEndpoint(
 
 			case "add":
 				epf = blogAddFlags
+
+			}
+
+		case "user":
+			switch epn {
+			case "create":
+				epf = userCreateFlags
+
+			case "list":
+				epf = userListFlags
 
 			}
 
@@ -201,6 +238,16 @@ func ParseEndpoint(
 				endpoint = c.Add()
 				data, err = blogc.BuildAddPayload(*blogAddBodyFlag, *blogAddIDFlag)
 			}
+		case "user":
+			c := userc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "create":
+				endpoint = c.Create()
+				data, err = userc.BuildCreatePayload(*userCreateBodyFlag, *userCreateAuthFlag)
+			case "list":
+				endpoint = c.List()
+				data = nil
+			}
 		}
 	}
 	if err != nil {
@@ -231,7 +278,7 @@ Github authentication to post a new blog
 
 Example:
     `+os.Args[0]+` oauth oauth --body '{
-      "token": "Aliquid provident."
+      "token": "Non eaque omnis."
    }'
 `, os.Args[0])
 }
@@ -265,17 +312,21 @@ Example:
       "blog": {
          "comments": [
             {
-               "comment": "Eligendi quam eveniet non eaque omnis et.",
-               "id": 5853931440448808029
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
             },
             {
-               "comment": "Eligendi quam eveniet non eaque omnis et.",
-               "id": 5853931440448808029
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
+            },
+            {
+               "comment": "Asperiores natus iste eaque iure velit.",
+               "id": 15837338112645027660
             }
          ],
-         "name": "Soluta aut dolorum fuga rerum et et."
+         "name": "Sed et aut voluptatem et voluptas."
       }
-   }' --auth "Ea ratione at et."
+   }' --auth "Ullam voluptate excepturi totam ducimus."
 `, os.Args[0])
 }
 
@@ -296,7 +347,7 @@ Show blog based on the id given
     -id UINT: ID of the blog to be fetched
 
 Example:
-    `+os.Args[0]+` blog show --id 2757763773622452166
+    `+os.Args[0]+` blog show --id 3723687285656444484
 `, os.Args[0])
 }
 
@@ -307,7 +358,7 @@ Delete a blog
     -id UINT: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 16522289313636908332
+    `+os.Args[0]+` blog remove --id 7756890201828965410
 `, os.Args[0])
 }
 
@@ -321,9 +372,52 @@ Add a new comment for a blog
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comment": "Eligendi quam eveniet non eaque omnis et.",
-         "id": 5853931440448808029
+         "comment": "Asperiores natus iste eaque iure velit.",
+         "id": 15837338112645027660
       }
-   }' --id 2169912030633346718
+   }' --id 8109795710196175397
+`, os.Args[0])
+}
+
+// userUsage displays the usage of the user command and its subcommands.
+func userUsage() {
+	fmt.Fprintf(os.Stderr, `The user service gives user details.
+Usage:
+    %s [globalflags] user COMMAND [flags]
+
+COMMAND:
+    create: Add a new blog
+    list: List all the users
+
+Additional help:
+    %s user COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func userCreateUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] user create -body JSON -auth STRING
+
+Add a new blog
+    -body JSON: 
+    -auth STRING: 
+
+Example:
+    `+os.Args[0]+` user create --body '{
+      "user": {
+         "age": 2340686031751127884,
+         "class": "Minus soluta aut dolorum fuga.",
+         "id": 9607508899083994649,
+         "name": "Provident perspiciatis accusamus vel nam."
+      }
+   }' --auth "Esse ut ut occaecati."
+`, os.Args[0])
+}
+
+func userListUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] user list
+
+List all the users
+
+Example:
+    `+os.Args[0]+` user list
 `, os.Args[0])
 }

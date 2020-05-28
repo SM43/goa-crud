@@ -24,7 +24,7 @@ func BuildCreatePayload(blogCreateBody string, blogCreateAuth string) (*blog.Cre
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"blog\": {\n         \"comments\": [\n            {\n               \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n               \"id\": 5853931440448808029\n            },\n            {\n               \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n               \"id\": 5853931440448808029\n            }\n         ],\n         \"name\": \"Soluta aut dolorum fuga rerum et et.\"\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"blog\": {\n         \"comments\": [\n            {\n               \"comment\": \"Asperiores natus iste eaque iure velit.\",\n               \"id\": 15837338112645027660\n            },\n            {\n               \"comment\": \"Asperiores natus iste eaque iure velit.\",\n               \"id\": 15837338112645027660\n            },\n            {\n               \"comment\": \"Asperiores natus iste eaque iure velit.\",\n               \"id\": 15837338112645027660\n            }\n         ],\n         \"name\": \"Sed et aut voluptatem et voluptas.\"\n      }\n   }'")
 		}
 		if body.Blog == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("blog", "body"))
@@ -96,7 +96,7 @@ func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.AddPayload, er
 	{
 		err = json.Unmarshal([]byte(blogAddBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Eligendi quam eveniet non eaque omnis et.\",\n         \"id\": 5853931440448808029\n      }\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Asperiores natus iste eaque iure velit.\",\n         \"id\": 15837338112645027660\n      }\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))

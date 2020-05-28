@@ -18,6 +18,7 @@ import (
 	blogapi "github.com/sm43/goa-crud"
 	blog "github.com/sm43/goa-crud/gen/blog"
 	oauth "github.com/sm43/goa-crud/gen/oauth"
+	user "github.com/sm43/goa-crud/gen/user"
 )
 
 func main() {
@@ -60,17 +61,19 @@ func main() {
 		fmt.Println("Successful Db Connection..!!")
 		defer db.Close()
 		db.LogMode(true)
-		db.AutoMigrate(blogapi.Blog{}, blogapi.Comment{})
+		db.AutoMigrate(blogapi.Blog{}, blogapi.Comment{}, blogapi.User{})
 	}
 
 	// Initialize the services.
 	var (
 		oauthSvc oauth.Service
 		blogSvc  blog.Service
+		userSvc  user.Service
 	)
 	{
 		oauthSvc = blogapi.NewOauth(db, logger)
 		blogSvc = blogapi.NewBlog(db, logger)
+		userSvc = blogapi.NewUser(db, logger)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
@@ -78,10 +81,12 @@ func main() {
 	var (
 		oauthEndpoints *oauth.Endpoints
 		blogEndpoints  *blog.Endpoints
+		userEndpoints  *user.Endpoints
 	)
 	{
 		oauthEndpoints = oauth.NewEndpoints(oauthSvc)
 		blogEndpoints = blog.NewEndpoints(blogSvc)
+		userEndpoints = user.NewEndpoints(userSvc)
 	}
 
 	// Create channel used by both the signal handler and server goroutines
@@ -121,7 +126,7 @@ func main() {
 			} else if u.Port() == "" {
 				u.Host += ":80"
 			}
-			handleHTTPServer(ctx, u, oauthEndpoints, blogEndpoints, &wg, errc, logger, *dbgF)
+			handleHTTPServer(ctx, u, oauthEndpoints, blogEndpoints, userEndpoints, &wg, errc, logger, *dbgF)
 		}
 
 	default:

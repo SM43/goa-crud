@@ -15,7 +15,7 @@ var _ = API("blog", func() {
 			URI("http://localhost:8000")
 		})
 	})
-	cors.Origin("/.*localhost/", func() {
+	cors.Origin("/.*localhost.*/", func() {
 		cors.Headers("X-Shared-Secret")
 		cors.Methods("GET", "POST")
 		cors.Expose("X-Time", "X-Api-Version")

@@ -18,4 +18,12 @@ type (
 		Blog   Blog
 		BlogID int
 	}
+
+	// User Db Structure
+	User struct {
+		gorm.Model
+		Name  string `gorm:"not null;unique"`
+		Age   uint
+		Class string
+	}
 )

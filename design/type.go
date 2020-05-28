@@ -2,6 +2,19 @@ package design
 
 import . "goa.design/goa/v3/dsl"
 
+var User = ResultType("application/vnd.goa-crud.stored-user", func() {
+	Description("A User describes a user retrieved by the storage service.")
+	TypeName("User")
+	Attributes(func() {
+		Attribute("id", UInt, "ID is the unique id of the user")
+		Attribute("name", String, "Name of user")
+		Attribute("age", UInt, "Age of user")
+		Attribute("class", String, "Class of user")
+		Required("name", "age", "class")
+	})
+
+})
+
 var StoredBlog = ResultType("application/vnd.goa-crud.stored-blog", func() {
 	Description("A Blog describes a blog retrieved by the storage service.")
 	TypeName("StoredBlog")
@@ -43,5 +56,3 @@ var Comment = Type("Comment", func() {
 
 	Required("comment")
 })
-
-
