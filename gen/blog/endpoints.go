@@ -3,7 +3,7 @@
 // blog endpoints
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package blog
 
@@ -17,10 +17,9 @@ import (
 type Endpoints struct {
 	Create goa.Endpoint
 	List   goa.Endpoint
-	Remove goa.Endpoint
-	Update goa.Endpoint
-	Add    goa.Endpoint
 	Show   goa.Endpoint
+	Remove goa.Endpoint
+	Add    goa.Endpoint
 }
 
 // NewEndpoints wraps the methods of the "blog" service with endpoints.
@@ -28,10 +27,9 @@ func NewEndpoints(s Service) *Endpoints {
 	return &Endpoints{
 		Create: NewCreateEndpoint(s),
 		List:   NewListEndpoint(s),
-		Remove: NewRemoveEndpoint(s),
-		Update: NewUpdateEndpoint(s),
-		Add:    NewAddEndpoint(s),
 		Show:   NewShowEndpoint(s),
+		Remove: NewRemoveEndpoint(s),
+		Add:    NewAddEndpoint(s),
 	}
 }
 
@@ -39,18 +37,17 @@ func NewEndpoints(s Service) *Endpoints {
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
 	e.Create = m(e.Create)
 	e.List = m(e.List)
-	e.Remove = m(e.Remove)
-	e.Update = m(e.Update)
-	e.Add = m(e.Add)
 	e.Show = m(e.Show)
+	e.Remove = m(e.Remove)
+	e.Add = m(e.Add)
 }
 
 // NewCreateEndpoint returns an endpoint function that calls the method
 // "create" of service "blog".
 func NewCreateEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*Blog)
-		return s.Create(ctx, p)
+		p := req.(*CreatePayload)
+		return nil, s.Create(ctx, p)
 	}
 }
 
@@ -59,6 +56,20 @@ func NewCreateEndpoint(s Service) goa.Endpoint {
 func NewListEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		return s.List(ctx)
+	}
+}
+
+// NewShowEndpoint returns an endpoint function that calls the method "show" of
+// service "blog".
+func NewShowEndpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*ShowPayload)
+		res, err := s.Show(ctx, p)
+		if err != nil {
+			return nil, err
+		}
+		vres := NewViewedStoredBlog(res, "default")
+		return vres, nil
 	}
 }
 
@@ -71,29 +82,11 @@ func NewRemoveEndpoint(s Service) goa.Endpoint {
 	}
 }
 
-// NewUpdateEndpoint returns an endpoint function that calls the method
-// "update" of service "blog".
-func NewUpdateEndpoint(s Service) goa.Endpoint {
-	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*UpdatePayload)
-		return nil, s.Update(ctx, p)
-	}
-}
-
 // NewAddEndpoint returns an endpoint function that calls the method "add" of
 // service "blog".
 func NewAddEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*NewComment)
-		return s.Add(ctx, p)
-	}
-}
-
-// NewShowEndpoint returns an endpoint function that calls the method "show" of
-// service "blog".
-func NewShowEndpoint(s Service) goa.Endpoint {
-	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*Blog)
-		return s.Show(ctx, p)
+		p := req.(*AddPayload)
+		return nil, s.Add(ctx, p)
 	}
 }

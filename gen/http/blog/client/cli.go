@@ -3,40 +3,69 @@
 // blog HTTP client CLI support package
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package client
 
 import (
-	blog "crud/gen/blog"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
+	blog "github.com/sm43/goa-crud/gen/blog"
 	goa "goa.design/goa/v3/pkg"
 )
 
 // BuildCreatePayload builds the payload for the blog create endpoint from CLI
 // flags.
-func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
+func BuildCreatePayload(blogCreateBody string, blogCreateAuth string) (*blog.CreatePayload, error) {
 	var err error
 	var body CreateRequestBody
 	{
 		err = json.Unmarshal([]byte(blogCreateBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"id\": 2998605239,\n      \"name\": \"53p\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"blog\": {\n         \"comments\": [\n            {\n               \"comment\": \"Iure velit.\",\n               \"id\": 8779553980399303872\n            },\n            {\n               \"comment\": \"Iure velit.\",\n               \"id\": 8779553980399303872\n            },\n            {\n               \"comment\": \"Iure velit.\",\n               \"id\": 8779553980399303872\n            }\n         ],\n         \"name\": \"Nihil consequatur sunt asperiores.\"\n      }\n   }'")
+		}
+		if body.Blog == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("blog", "body"))
+		}
+		if body.Blog != nil {
+			if err2 := ValidateBlogRequestBody(body.Blog); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+		if err != nil {
+			return nil, err
 		}
 	}
-	v := &blog.Blog{
-		ID:   body.ID,
-		Name: body.Name,
+	var auth string
+	{
+		auth = blogCreateAuth
 	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
+	v := &blog.CreatePayload{}
+	if body.Blog != nil {
+		v.Blog = marshalBlogRequestBodyToBlogBlog(body.Blog)
+	}
+	v.Auth = auth
+
+	return v, nil
+}
+
+// BuildShowPayload builds the payload for the blog show endpoint from CLI
+// flags.
+func BuildShowPayload(blogShowID string) (*blog.ShowPayload, error) {
+	var err error
+	var id uint
+	{
+		var v uint64
+		v, err = strconv.ParseUint(blogShowID, 10, 64)
+		id = uint(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
 		}
 	}
+	v := &blog.ShowPayload{}
+	v.ID = id
 
 	return v, nil
 }
@@ -45,13 +74,13 @@ func BuildCreatePayload(blogCreateBody string) (*blog.Blog, error) {
 // flags.
 func BuildRemovePayload(blogRemoveID string) (*blog.RemovePayload, error) {
 	var err error
-	var id uint32
+	var id uint
 	{
 		var v uint64
-		v, err = strconv.ParseUint(blogRemoveID, 10, 32)
-		id = uint32(v)
+		v, err = strconv.ParseUint(blogRemoveID, 10, 64)
+		id = uint(v)
 		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
 		}
 	}
 	v := &blog.RemovePayload{}
@@ -60,15 +89,14 @@ func BuildRemovePayload(blogRemoveID string) (*blog.RemovePayload, error) {
 	return v, nil
 }
 
-// BuildUpdatePayload builds the payload for the blog update endpoint from CLI
-// flags.
-func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.UpdatePayload, error) {
+// BuildAddPayload builds the payload for the blog add endpoint from CLI flags.
+func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.AddPayload, error) {
 	var err error
-	var body UpdateRequestBody
+	var body AddRequestBody
 	{
-		err = json.Unmarshal([]byte(blogUpdateBody), &body)
+		err = json.Unmarshal([]byte(blogAddBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"Et incidunt.\"\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comment\": \"Iure velit.\",\n         \"id\": 8779553980399303872\n      }\n   }'")
 		}
 		if body.Comments == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("comments", "body"))
@@ -77,87 +105,20 @@ func BuildUpdatePayload(blogUpdateBody string, blogUpdateID string) (*blog.Updat
 			return nil, err
 		}
 	}
-	var id uint32
+	var id uint
 	{
 		var v uint64
-		v, err = strconv.ParseUint(blogUpdateID, 10, 32)
-		id = uint32(v)
+		v, err = strconv.ParseUint(blogAddID, 10, 64)
+		id = uint(v)
 		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
+			return nil, fmt.Errorf("invalid value for id, must be UINT")
 		}
 	}
-	v := &blog.UpdatePayload{
-		Name: body.Name,
-	}
+	v := &blog.AddPayload{}
 	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
-		}
+		v.Comments = marshalCommentRequestBodyToBlogComment(body.Comments)
 	}
-	v.ID = &id
-
-	return v, nil
-}
-
-// BuildAddPayload builds the payload for the blog add endpoint from CLI flags.
-func BuildAddPayload(blogAddBody string, blogAddID string) (*blog.NewComment, error) {
-	var err error
-	var body AddRequestBody
-	{
-		err = json.Unmarshal([]byte(blogAddBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": {\n         \"comments\": \"Consequatur nesciunt.\",\n         \"id\": 3163100479\n      }\n   }'")
-		}
-	}
-	var id uint32
-	{
-		var v uint64
-		v, err = strconv.ParseUint(blogAddID, 10, 32)
-		id = uint32(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
-		}
-	}
-	v := &blog.NewComment{}
-	if body.Comments != nil {
-		v.Comments = marshalCommentsRequestBodyToBlogComments(body.Comments)
-	}
-	v.ID = &id
-
-	return v, nil
-}
-
-// BuildShowPayload builds the payload for the blog show endpoint from CLI
-// flags.
-func BuildShowPayload(blogShowBody string, blogShowID string) (*blog.Blog, error) {
-	var err error
-	var body ShowRequestBody
-	{
-		err = json.Unmarshal([]byte(blogShowBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, example of valid JSON:\n%s", "'{\n      \"comments\": [\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         },\n         {\n            \"comments\": \"Consequatur nesciunt.\",\n            \"id\": 3163100479\n         }\n      ],\n      \"name\": \"4r0\"\n   }'")
-		}
-	}
-	var id uint32
-	{
-		var v uint64
-		v, err = strconv.ParseUint(blogShowID, 10, 32)
-		id = uint32(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for id, must be UINT32")
-		}
-	}
-	v := &blog.Blog{
-		Name: body.Name,
-	}
-	if body.Comments != nil {
-		v.Comments = make([]*blog.Comments, len(body.Comments))
-		for i, val := range body.Comments {
-			v.Comments[i] = marshalCommentsRequestBodyToBlogComments(val)
-		}
-	}
-	v.ID = &id
+	v.ID = id
 
 	return v, nil
 }

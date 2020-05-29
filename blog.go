@@ -2,97 +2,112 @@ package blogapi
 
 import (
 	"context"
-	blog "crud/gen/blog"
+	"fmt"
 	"log"
+
+	"github.com/jinzhu/gorm"
+	blog "github.com/sm43/goa-crud/gen/blog"
 )
 
 // blog service example implementation.
 // The example methods log the requests and return zero values.
 type blogsrvc struct {
+	db     *gorm.DB
 	logger *log.Logger
 }
 
-var blog_store = make([]*blog.Storedblog, 0)
-
 // NewBlog returns the blog service implementation.
-func NewBlog(logger *log.Logger) blog.Service {
-	return &blogsrvc{logger}
+func NewBlog(db *gorm.DB, logger *log.Logger) blog.Service {
+	return &blogsrvc{db, logger}
 }
 
 // Add new blog and return its ID.
-func (s *blogsrvc) Create(ctx context.Context, p *blog.Blog) (res *blog.Blog, err error) {
-	res = &blog.Blog{}
-	s.logger.Print("blog.create")
+func (s *blogsrvc) Create(ctx context.Context, p *blog.CreatePayload) (err error) {
 
-	item := blog.Storedblog{*p.ID, *p.Name, p.Comments}
-	blog_store = append(blog_store, &item)
+	err = VerifyJWT(p.Auth)
+	if err != nil {
+		s.logger.Println("Invalid user", err.Error())
+		return blog.MakeInvalidToken(fmt.Errorf(err.Error()))
+	}
 
-	res = (&blog.Blog{ID: p.ID, Name: p.Name, Comments: p.Comments})
-	return
+	blog := &Blog{Name: p.Blog.Name}
+	err = s.db.Create(blog).Error
+	for _, comment := range p.Blog.Comments {
+		if err := s.db.Model(&blog).Association("Comments").Append(&Comment{Text: comment.Comment}).Error; err != nil {
+			return err
+		}
+	}
+	return err
 }
 
 // List all entries
-func (s *blogsrvc) List(ctx context.Context) (res []*blog.Storedblog, err error) {
-	s.logger.Print("blog.list")
+func (s *blogsrvc) List(ctx context.Context) (res []*blog.StoredBlog, err error) {
 
-	return blog_store, nil
-}
-
-// Remove blog from storage
-func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error) {
-
-	s.logger.Print("blog.remove")
-
-	for i, singleBlog := range blog_store {
-		if singleBlog.ID == p.ID {
-			blog_store = append(blog_store[:i], blog_store[i+1:]...)
-			log.Print("The event with ID has been deleted successfully", singleBlog.ID)
-		}
-	}
-	return
-}
-
-// Updating the existing blog
-func (s *blogsrvc) Update(ctx context.Context, p *blog.UpdatePayload) (err error) {
-	s.logger.Print("blog.update")
-
-	for i, singleBlog := range blog_store {
-		if singleBlog.ID == *p.ID {
-			singleBlog.Name = p.Name
-			singleBlog.Comments = p.Comments
-			blog_store = append(blog_store[:i], singleBlog)
-		}
-	}
-	return
-}
-
-// Add new blog and return its ID.
-func (s *blogsrvc) Add(ctx context.Context, p *blog.NewComment) (res *blog.NewComment, err error) {
-
-	res = &blog.NewComment{}
-	s.logger.Print("blog.add")
-
-	for i := range blog_store {
-		if blog_store[i].ID == *p.ID {
-			blog_store[i].Comments = append(blog_store[i].Comments, p.Comments)
-		}
+	var all []Blog
+	if err = s.db.Preload("Comments").Find(&all).Error; err != nil {
+		return nil, blog.MakeDbError(fmt.Errorf(err.Error()))
 	}
 
-	return
-}
+	for _, r := range all {
+		comments := []*blog.StoredComment{}
+		for _, c := range r.Comments {
+			comments = append(comments, &blog.StoredComment{
+				ID:      c.ID,
+				Comment: c.Text,
+			})
+		}
+		res = append(res, &blog.StoredBlog{
+			ID:       r.ID,
+			Name:     r.Name,
+			Comments: comments,
+		})
+	}
 
+	return res, nil
+}
 
 // Show blog based on the id given
-func (s *blogsrvc) Show(ctx context.Context, p *blog.Blog) (res *blog.Blog, err error) {
-	res = &blog.Blog{}
-	s.logger.Print("blog.show")
+func (s *blogsrvc) Show(ctx context.Context, p *blog.ShowPayload) (res *blog.StoredBlog, err error) {
 
-	for _,singleBlog := range blog_store {
-		if singleBlog.ID == *p.ID {
-			res.ID = &singleBlog.ID
-			res.Name = &singleBlog.Name
-			res.Comments = singleBlog.Comments
-		}
+	b := Blog{}
+	if err = s.db.Preload("Comments").First(&b, p.ID).Error; err != nil {
+		return nil, blog.MakeDbError(fmt.Errorf(err.Error()))
 	}
+
+	comments := []*blog.StoredComment{}
+	for _, c := range b.Comments {
+		comments = append(comments, &blog.StoredComment{
+			ID:      c.ID,
+			Comment: c.Text,
+		})
+	}
+	res = &blog.StoredBlog{
+		ID:       b.ID,
+		Name:     b.Name,
+		Comments: comments,
+	}
+	return res, nil
+}
+
+// Delete a blog
+func (s *blogsrvc) Remove(ctx context.Context, p *blog.RemovePayload) (err error) {
+
+	if err = s.db.Unscoped().Where("id = ?", p.ID).Delete(Blog{}).Error; err != nil {
+		return blog.MakeDbError(fmt.Errorf(err.Error()))
+	}
+	return
+}
+
+// Add a new comment for a blog
+func (s *blogsrvc) Add(ctx context.Context, p *blog.AddPayload) (err error) {
+
+	b := Blog{}
+	if err = s.db.Where("id = ?", p.ID).First(&b).Error; err != nil {
+		return blog.MakeDbError(fmt.Errorf(err.Error()))
+	}
+	if err = s.db.Model(&b).Association("Comments").Append(&Comment{Text: p.Comments.Comment}).Error; err != nil {
+		return blog.MakeDbError(fmt.Errorf(err.Error()))
+	}
+
 	return
 }

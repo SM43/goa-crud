@@ -2,62 +2,57 @@ package design
 
 import . "goa.design/goa/v3/dsl"
 
-var StoredBlogs = ResultType("application/vnd.cellar.stored-blog", func() {
-	Description("A Storedblog describes a blog retrieved by the storage service.")
-	Reference(Blog)
-	TypeName("Storedblog")
-
+var User = ResultType("application/vnd.goa-crud.stored-user", func() {
+	Description("A User describes a user retrieved by the storage service.")
+	TypeName("User")
 	Attributes(func() {
-		Attribute("id", UInt32, "ID is the unique id of the blog.")
-
-		Attribute("name", String, "Name of person", func() {
-			MaxLength(100)
-		})
-
-		Attribute("comments", ArrayOf(comments), "Comments", func() {
-			MaxLength(100)
-		})
-
+		Attribute("id", UInt, "ID is the unique id of the user")
+		Attribute("name", String, "Name of user")
+		Attribute("age", UInt, "Age of user")
+		Attribute("class", String, "Class of user")
+		Required("name", "age", "class")
 	})
 
-	Required("id", "name")
+})
+
+var StoredBlog = ResultType("application/vnd.goa-crud.stored-blog", func() {
+	Description("A Blog describes a blog retrieved by the storage service.")
+	TypeName("StoredBlog")
+	Reference(Blog)
+
+	Attributes(func() {
+		Attribute("id", UInt, "ID is the unique id of the blog")
+		Attribute("name")
+		Attribute("comments", ArrayOf(StoredComment), "Blog with multiple comments")
+		Required("id", "name", "comments")
+	})
+
 })
 
 var Blog = Type("Blog", func() {
-	Description("Blog with id and name of a person")
+	Description("A Blog describes a blog retrieved by the storage service.")
 
-	Attribute("id", UInt32, "ID of a person")
+	Attribute("name", String, "Name of person")
+	Attribute("comments", ArrayOf(Comment), "Blog will have multiple comments")
 
-	Attribute("name", String, "Name of person", func() {
-		MaxLength(100)
-	})
-	Attribute("comments", ArrayOf(comments), "Comments", func() {
-		MaxLength(100)
-	})
-
+	Required("name", "comments")
 })
 
-var new_comment = Type("new_comment", func() {
-	Description("New comment to be added to an existing blog")
+var StoredComment = Type("StoredComment", func() {
+	Description("A blog will have multiple comments")
+	Reference(Comment)
 
-	Attribute("id", UInt32, "Id of blog")
+	Attribute("id")
+	Attribute("comment")
 
-	Attribute("comments", comments, "Comment added to an existing blog")
-
+	Required("id", "comment")
 })
 
-var comments = Type("Comments", func() {
+var Comment = Type("Comment", func() {
+	Description("A blog will have multiple comments")
 
-	Description("Id and comments")
+	Attribute("id", UInt, "ID of a comment")
+	Attribute("comment", String, "Comment for the blog")
 
-	Attribute("id", UInt32, "ID of a comment")
-
-	Attribute("comments", String, "Comment for the blog")
+	Required("comment")
 })
-
-var NotFound = Type("NotFound", func() {
-	Description("NotFound is the type returned when attempting to show or delete a blog that does not exist.")
-	Field(2, "id", UInt32, "ID of missing blog")
-	Required("id")
-})
-

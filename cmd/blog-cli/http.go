@@ -1,10 +1,10 @@
 package main
 
 import (
-	cli "crud/gen/http/cli/blog"
 	"net/http"
 	"time"
 
+	cli "github.com/sm43/goa-crud/gen/http/cli/blog"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )

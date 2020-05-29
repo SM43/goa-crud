@@ -3,17 +3,18 @@
 // blog HTTP client CLI support package
 //
 // Command:
-// $ goa gen crud/design
+// $ goa gen github.com/sm43/goa-crud/design
 
 package cli
 
 import (
-	blogc "crud/gen/http/blog/client"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
 
+	blogc "github.com/sm43/goa-crud/gen/http/blog/client"
+	oauthc "github.com/sm43/goa-crud/gen/http/oauth/client"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -23,30 +24,44 @@ import (
 //    command (subcommand1|subcommand2|...)
 //
 func UsageCommands() string {
-	return `blog (create|list|remove|update|add|show)
+	return `oauth oauth
+blog (create|list|show|remove|add)
+user (create|list)
 `
 }
 
 // UsageExamples produces an example of a valid invocation of the CLI tool.
 func UsageExamples() string {
-	return os.Args[0] + ` blog create --body '{
-      "comments": [
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         }
-      ],
-      "id": 2998605239,
-      "name": "53p"
+	return os.Args[0] + ` oauth oauth --body '{
+      "token": "Non eaque omnis."
    }'` + "\n" +
+		os.Args[0] + ` blog create --body '{
+      "blog": {
+         "comments": [
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            },
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            },
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            }
+         ],
+         "name": "Nihil consequatur sunt asperiores."
+      }
+   }' --auth "Ullam voluptate excepturi totam ducimus."` + "\n" +
+		os.Args[0] + ` user create --body '{
+      "user": {
+         "age": 2340686031751127884,
+         "class": "Minus soluta aut dolorum fuga.",
+         "id": 9607508899083994649,
+         "name": "Provident perspiciatis accusamus vel nam."
+      }
+   }' --auth "Enim architecto consequatur."` + "\n" +
 		""
 }
 
@@ -60,35 +75,50 @@ func ParseEndpoint(
 	restore bool,
 ) (goa.Endpoint, interface{}, error) {
 	var (
+		oauthFlags = flag.NewFlagSet("oauth", flag.ContinueOnError)
+
+		oauthOauthFlags    = flag.NewFlagSet("oauth", flag.ExitOnError)
+		oauthOauthBodyFlag = oauthOauthFlags.String("body", "REQUIRED", "")
+
 		blogFlags = flag.NewFlagSet("blog", flag.ContinueOnError)
 
 		blogCreateFlags    = flag.NewFlagSet("create", flag.ExitOnError)
 		blogCreateBodyFlag = blogCreateFlags.String("body", "REQUIRED", "")
+		blogCreateAuthFlag = blogCreateFlags.String("auth", "REQUIRED", "")
 
 		blogListFlags = flag.NewFlagSet("list", flag.ExitOnError)
+
+		blogShowFlags  = flag.NewFlagSet("show", flag.ExitOnError)
+		blogShowIDFlag = blogShowFlags.String("id", "REQUIRED", "ID of the blog to be fetched")
 
 		blogRemoveFlags  = flag.NewFlagSet("remove", flag.ExitOnError)
 		blogRemoveIDFlag = blogRemoveFlags.String("id", "REQUIRED", "ID of blog to remove")
 
-		blogUpdateFlags    = flag.NewFlagSet("update", flag.ExitOnError)
-		blogUpdateBodyFlag = blogUpdateFlags.String("body", "REQUIRED", "")
-		blogUpdateIDFlag   = blogUpdateFlags.String("id", "REQUIRED", "ID of blog to be updated")
-
 		blogAddFlags    = flag.NewFlagSet("add", flag.ExitOnError)
 		blogAddBodyFlag = blogAddFlags.String("body", "REQUIRED", "")
-		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of blog")
+		blogAddIDFlag   = blogAddFlags.String("id", "REQUIRED", "Id of the blog")
 
-		blogShowFlags    = flag.NewFlagSet("show", flag.ExitOnError)
-		blogShowBodyFlag = blogShowFlags.String("body", "REQUIRED", "")
-		blogShowIDFlag   = blogShowFlags.String("id", "REQUIRED", "ID of a person")
+		userFlags = flag.NewFlagSet("user", flag.ContinueOnError)
+
+		userCreateFlags    = flag.NewFlagSet("create", flag.ExitOnError)
+		userCreateBodyFlag = userCreateFlags.String("body", "REQUIRED", "")
+		userCreateAuthFlag = userCreateFlags.String("auth", "REQUIRED", "")
+
+		userListFlags = flag.NewFlagSet("list", flag.ExitOnError)
 	)
+	oauthFlags.Usage = oauthUsage
+	oauthOauthFlags.Usage = oauthOauthUsage
+
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
 	blogListFlags.Usage = blogListUsage
-	blogRemoveFlags.Usage = blogRemoveUsage
-	blogUpdateFlags.Usage = blogUpdateUsage
-	blogAddFlags.Usage = blogAddUsage
 	blogShowFlags.Usage = blogShowUsage
+	blogRemoveFlags.Usage = blogRemoveUsage
+	blogAddFlags.Usage = blogAddUsage
+
+	userFlags.Usage = userUsage
+	userCreateFlags.Usage = userCreateUsage
+	userListFlags.Usage = userListUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -105,8 +135,12 @@ func ParseEndpoint(
 	{
 		svcn = flag.Arg(0)
 		switch svcn {
+		case "oauth":
+			svcf = oauthFlags
 		case "blog":
 			svcf = blogFlags
+		case "user":
+			svcf = userFlags
 		default:
 			return nil, nil, fmt.Errorf("unknown service %q", svcn)
 		}
@@ -122,6 +156,13 @@ func ParseEndpoint(
 	{
 		epn = svcf.Arg(0)
 		switch svcn {
+		case "oauth":
+			switch epn {
+			case "oauth":
+				epf = oauthOauthFlags
+
+			}
+
 		case "blog":
 			switch epn {
 			case "create":
@@ -130,17 +171,24 @@ func ParseEndpoint(
 			case "list":
 				epf = blogListFlags
 
+			case "show":
+				epf = blogShowFlags
+
 			case "remove":
 				epf = blogRemoveFlags
-
-			case "update":
-				epf = blogUpdateFlags
 
 			case "add":
 				epf = blogAddFlags
 
-			case "show":
-				epf = blogShowFlags
+			}
+
+		case "user":
+			switch epn {
+			case "create":
+				epf = userCreateFlags
+
+			case "list":
+				epf = userListFlags
 
 			}
 
@@ -164,27 +212,41 @@ func ParseEndpoint(
 	)
 	{
 		switch svcn {
+		case "oauth":
+			c := oauthc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "oauth":
+				endpoint = c.Oauth()
+				data, err = oauthc.BuildOauthPayload(*oauthOauthBodyFlag)
+			}
 		case "blog":
 			c := blogc.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
 			case "create":
 				endpoint = c.Create()
-				data, err = blogc.BuildCreatePayload(*blogCreateBodyFlag)
+				data, err = blogc.BuildCreatePayload(*blogCreateBodyFlag, *blogCreateAuthFlag)
 			case "list":
 				endpoint = c.List()
 				data = nil
+			case "show":
+				endpoint = c.Show()
+				data, err = blogc.BuildShowPayload(*blogShowIDFlag)
 			case "remove":
 				endpoint = c.Remove()
 				data, err = blogc.BuildRemovePayload(*blogRemoveIDFlag)
-			case "update":
-				endpoint = c.Update()
-				data, err = blogc.BuildUpdatePayload(*blogUpdateBodyFlag, *blogUpdateIDFlag)
 			case "add":
 				endpoint = c.Add()
 				data, err = blogc.BuildAddPayload(*blogAddBodyFlag, *blogAddIDFlag)
-			case "show":
-				endpoint = c.Show()
-				data, err = blogc.BuildShowPayload(*blogShowBodyFlag, *blogShowIDFlag)
+			}
+		case "user":
+			c := userc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "create":
+				endpoint = c.Create()
+				data, err = userc.BuildCreatePayload(*userCreateBodyFlag, *userCreateAuthFlag)
+			case "list":
+				endpoint = c.List()
+				data = nil
 			}
 		}
 	}
@@ -195,6 +257,32 @@ func ParseEndpoint(
 	return endpoint, data, nil
 }
 
+// oauthUsage displays the usage of the oauth command and its subcommands.
+func oauthUsage() {
+	fmt.Fprintf(os.Stderr, `The oauth service authorise user to access other APIs
+Usage:
+    %s [globalflags] oauth COMMAND [flags]
+
+COMMAND:
+    oauth: Github authentication to post a new blog
+
+Additional help:
+    %s oauth COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func oauthOauthUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] oauth oauth -body JSON
+
+Github authentication to post a new blog
+    -body JSON: 
+
+Example:
+    `+os.Args[0]+` oauth oauth --body '{
+      "token": "Non eaque omnis."
+   }'
+`, os.Args[0])
+}
+
 // blogUsage displays the usage of the blog command and its subcommands.
 func blogUsage() {
 	fmt.Fprintf(os.Stderr, `The blog service gives blog details.
@@ -202,135 +290,134 @@ Usage:
     %s [globalflags] blog COMMAND [flags]
 
 COMMAND:
-    create: Add new blog and return its ID.
-    list: List all entries
-    remove: Remove blog from storage
-    update: Updating the existing blog
-    add: Add new blog and return its ID.
+    create: Add a new blog
+    list: List all the blogs
     show: Show blog based on the id given
+    remove: Delete a blog
+    add: Add a new comment for a blog
 
 Additional help:
     %s blog COMMAND --help
 `, os.Args[0], os.Args[0])
 }
 func blogCreateUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog create -body JSON
+	fmt.Fprintf(os.Stderr, `%s [flags] blog create -body JSON -auth STRING
 
-Add new blog and return its ID.
+Add a new blog
     -body JSON: 
+    -auth STRING: 
 
 Example:
     `+os.Args[0]+` blog create --body '{
-      "comments": [
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         }
-      ],
-      "id": 2998605239,
-      "name": "53p"
-   }'
+      "blog": {
+         "comments": [
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            },
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            },
+            {
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
+            }
+         ],
+         "name": "Nihil consequatur sunt asperiores."
+      }
+   }' --auth "Ullam voluptate excepturi totam ducimus."
 `, os.Args[0])
 }
 
 func blogListUsage() {
 	fmt.Fprintf(os.Stderr, `%s [flags] blog list
 
-List all entries
+List all the blogs
 
 Example:
     `+os.Args[0]+` blog list
 `, os.Args[0])
 }
 
-func blogRemoveUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog remove -id UINT32
+func blogShowUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] blog show -id UINT
 
-Remove blog from storage
-    -id UINT32: ID of blog to remove
+Show blog based on the id given
+    -id UINT: ID of the blog to be fetched
 
 Example:
-    `+os.Args[0]+` blog remove --id 3140786710
+    `+os.Args[0]+` blog show --id 1685340132462609181
 `, os.Args[0])
 }
 
-func blogUpdateUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog update -body JSON -id UINT32
+func blogRemoveUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] blog remove -id UINT
 
-Updating the existing blog
-    -body JSON: 
-    -id UINT32: ID of blog to be updated
+Delete a blog
+    -id UINT: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog update --body '{
-      "comments": [
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         }
-      ],
-      "name": "Et incidunt."
-   }' --id 43896983
+    `+os.Args[0]+` blog remove --id 8109795710196175397
 `, os.Args[0])
 }
 
 func blogAddUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog add -body JSON -id UINT32
+	fmt.Fprintf(os.Stderr, `%s [flags] blog add -body JSON -id UINT
 
-Add new blog and return its ID.
+Add a new comment for a blog
     -body JSON: 
-    -id UINT32: Id of blog
+    -id UINT: Id of the blog
 
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comments": "Consequatur nesciunt.",
-         "id": 3163100479
+         "comment": "Iure velit.",
+         "id": 8779553980399303872
       }
-   }' --id 3809683775
+   }' --id 16849553098629863428
 `, os.Args[0])
 }
 
-func blogShowUsage() {
-	fmt.Fprintf(os.Stderr, `%s [flags] blog show -body JSON -id UINT32
+// userUsage displays the usage of the user command and its subcommands.
+func userUsage() {
+	fmt.Fprintf(os.Stderr, `The user service gives user details.
+Usage:
+    %s [globalflags] user COMMAND [flags]
 
-Show blog based on the id given
+COMMAND:
+    create: Add a new blog
+    list: List all the users
+
+Additional help:
+    %s user COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func userCreateUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] user create -body JSON -auth STRING
+
+Add a new blog
     -body JSON: 
-    -id UINT32: ID of a person
+    -auth STRING: 
 
 Example:
-    `+os.Args[0]+` blog show --body '{
-      "comments": [
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         },
-         {
-            "comments": "Consequatur nesciunt.",
-            "id": 3163100479
-         }
-      ],
-      "name": "4r0"
-   }' --id 919284169
+    `+os.Args[0]+` user create --body '{
+      "user": {
+         "age": 2340686031751127884,
+         "class": "Minus soluta aut dolorum fuga.",
+         "id": 9607508899083994649,
+         "name": "Provident perspiciatis accusamus vel nam."
+      }
+   }' --auth "Enim architecto consequatur."
+`, os.Args[0])
+}
+
+func userListUsage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] user list
+
+List all the users
+
+Example:
+    `+os.Args[0]+` user list
 `, os.Args[0])
 }
