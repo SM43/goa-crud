@@ -48,3 +48,31 @@ func DecodeOauthRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.D
 		return payload, nil
 	}
 }
+
+// EncodeOauthError returns an encoder for errors returned by the oauth oauth
+// endpoint.
+func EncodeOauthError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		en, ok := v.(ErrorNamer)
+		if !ok {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "internal_error":
+			res := v.(*goa.ServiceError)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewOauthInternalErrorResponseBody(res)
+			}
+			w.Header().Set("goa-error", "internal_error")
+			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}

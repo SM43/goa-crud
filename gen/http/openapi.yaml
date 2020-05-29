@@ -157,6 +157,10 @@ paths:
           description: OK response.
           schema:
             type: string
+        "500":
+          description: Internal Server Error response.
+          schema:
+            $ref: '#/definitions/OauthOauthInternalErrorResponseBody'
       schemes:
       - http
   /swagger/swagger.json:
@@ -252,19 +256,19 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: false
+        example: true
       timeout:
         type: boolean
         description: Is the error a timeout?
-        example: true
+        example: false
     description: Unable to process db request (default view)
     example:
       fault: true
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
-      temporary: false
-      timeout: true
+      temporary: true
+      timeout: false
     required:
     - name
     - id
@@ -280,8 +284,8 @@ definitions:
         $ref: '#/definitions/CommentRequestBody'
     example:
       comments:
-        comment: Asperiores natus iste eaque iure velit.
-        id: 15837338112645027660
+        comment: Iure velit.
+        id: 8779553980399303872
     required:
     - comments
   BlogCreateDbErrorResponseBody:
@@ -309,19 +313,19 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: false
+        example: true
       timeout:
         type: boolean
         description: Is the error a timeout?
         example: true
     description: Unable to process db request (default view)
     example:
-      fault: true
+      fault: false
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
-      temporary: false
-      timeout: false
+      temporary: true
+      timeout: true
     required:
     - name
     - id
@@ -354,7 +358,7 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: false
+        example: true
       timeout:
         type: boolean
         description: Is the error a timeout?
@@ -365,7 +369,7 @@ definitions:
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
-      temporary: true
+      temporary: false
       timeout: true
     required:
     - name
@@ -383,13 +387,13 @@ definitions:
     example:
       blog:
         comments:
-        - comment: Asperiores natus iste eaque iure velit.
-          id: 15837338112645027660
-        - comment: Asperiores natus iste eaque iure velit.
-          id: 15837338112645027660
-        - comment: Asperiores natus iste eaque iure velit.
-          id: 15837338112645027660
-        name: Sed et aut voluptatem et voluptas.
+        - comment: Iure velit.
+          id: 8779553980399303872
+        - comment: Iure velit.
+          id: 8779553980399303872
+        - comment: Iure velit.
+          id: 8779553980399303872
+        name: Nihil consequatur sunt asperiores.
     required:
     - blog
   BlogListDbErrorResponseBody:
@@ -417,7 +421,7 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: true
+        example: false
       timeout:
         type: boolean
         description: Is the error a timeout?
@@ -466,7 +470,7 @@ definitions:
       timeout:
         type: boolean
         description: Is the error a timeout?
-        example: false
+        example: true
     description: Unable to process db request (default view)
     example:
       fault: true
@@ -474,7 +478,7 @@ definitions:
       message: parameter 'p' must be an integer
       name: bad_request
       temporary: false
-      timeout: true
+      timeout: false
     required:
     - name
     - id
@@ -492,26 +496,28 @@ definitions:
           $ref: '#/definitions/CommentRequestBody'
         description: Blog will have multiple comments
         example:
-        - comment: Asperiores natus iste eaque iure velit.
-          id: 15837338112645027660
-        - comment: Asperiores natus iste eaque iure velit.
-          id: 15837338112645027660
+        - comment: Iure velit.
+          id: 8779553980399303872
+        - comment: Iure velit.
+          id: 8779553980399303872
+        - comment: Iure velit.
+          id: 8779553980399303872
       name:
         type: string
         description: Name of person
-        example: Temporibus quam quis.
+        example: Non qui corporis aspernatur ut aspernatur cumque.
     description: A Blog describes a blog retrieved by the storage service.
     example:
       comments:
-      - comment: Asperiores natus iste eaque iure velit.
-        id: 15837338112645027660
-      - comment: Asperiores natus iste eaque iure velit.
-        id: 15837338112645027660
-      - comment: Asperiores natus iste eaque iure velit.
-        id: 15837338112645027660
-      - comment: Asperiores natus iste eaque iure velit.
-        id: 15837338112645027660
-      name: Aspernatur ut.
+      - comment: Iure velit.
+        id: 8779553980399303872
+      - comment: Iure velit.
+        id: 8779553980399303872
+      - comment: Iure velit.
+        id: 8779553980399303872
+      - comment: Iure velit.
+        id: 8779553980399303872
+      name: Saepe voluptas necessitatibus labore nam minus.
     required:
     - name
     - comments
@@ -522,7 +528,7 @@ definitions:
       fault:
         type: boolean
         description: Is the error a server-side fault?
-        example: false
+        example: true
       id:
         type: string
         description: ID is a unique identifier for this particular occurrence of the
@@ -547,11 +553,11 @@ definitions:
         example: true
     description: Unable to process db request (default view)
     example:
-      fault: true
+      fault: false
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
-      temporary: true
+      temporary: false
       timeout: true
     required:
     - name
@@ -570,36 +576,30 @@ definitions:
           $ref: '#/definitions/StoredCommentResponseBody'
         description: Blog with multiple comments
         example:
-        - comment: Voluptatem architecto necessitatibus id dolor quos.
-          id: 4105474407472471672
-        - comment: Voluptatem architecto necessitatibus id dolor quos.
-          id: 4105474407472471672
-        - comment: Voluptatem architecto necessitatibus id dolor quos.
-          id: 4105474407472471672
-        - comment: Voluptatem architecto necessitatibus id dolor quos.
-          id: 4105474407472471672
+        - comment: Iste et eos voluptatem architecto necessitatibus id.
+          id: 12653072017091130437
+        - comment: Iste et eos voluptatem architecto necessitatibus id.
+          id: 12653072017091130437
+        - comment: Iste et eos voluptatem architecto necessitatibus id.
+          id: 12653072017091130437
       id:
         type: integer
         description: ID is the unique id of the blog
-        example: 14179604368104227843
+        example: 15195045545377320037
         format: int64
       name:
         type: string
         description: Name of person
-        example: Nam possimus asperiores ut.
+        example: Asperiores ad dolorem corporis amet.
     description: ShowResponseBody result type (default view)
     example:
       comments:
-      - comment: Voluptatem architecto necessitatibus id dolor quos.
-        id: 4105474407472471672
-      - comment: Voluptatem architecto necessitatibus id dolor quos.
-        id: 4105474407472471672
-      - comment: Voluptatem architecto necessitatibus id dolor quos.
-        id: 4105474407472471672
-      - comment: Voluptatem architecto necessitatibus id dolor quos.
-        id: 4105474407472471672
-      id: 10311198988496816882
-      name: Ad dolorem corporis.
+      - comment: Iste et eos voluptatem architecto necessitatibus id.
+        id: 12653072017091130437
+      - comment: Iste et eos voluptatem architecto necessitatibus id.
+        id: 12653072017091130437
+      id: 4655761708883978709
+      name: Consequatur voluptatem vel aut qui velit.
     required:
     - id
     - name
@@ -611,119 +611,26 @@ definitions:
       comment:
         type: string
         description: Comment for the blog
-        example: Quas nesciunt nisi mollitia.
+        example: Itaque odit.
       id:
         type: integer
         description: ID of a comment
-        example: 14535572615046656929
+        example: 8871157750952403261
         format: int64
     description: A blog will have multiple comments
     example:
-      comment: Ut ex aut non.
-      id: 12286622965091573265
+      comment: Enim rerum sed.
+      id: 13461490561757903450
     required:
     - comment
-  OauthOauthRequestBody:
-    title: OauthOauthRequestBody
-    type: object
-    properties:
-      token:
-        type: string
-        description: Access github token
-        example: Consequatur rerum autem.
-    example:
-      token: Id aut assumenda et.
-  StoredBlogResponse:
-    title: 'Mediatype identifier: application/vnd.goa-crud.stored-blog; view=default'
-    type: object
-    properties:
-      comments:
-        type: array
-        items:
-          $ref: '#/definitions/StoredCommentResponse'
-        description: Blog with multiple comments
-        example:
-        - comment: Atque minima.
-          id: 14042026595247118519
-        - comment: Atque minima.
-          id: 14042026595247118519
-        - comment: Atque minima.
-          id: 14042026595247118519
-        - comment: Atque minima.
-          id: 14042026595247118519
-      id:
-        type: integer
-        description: ID is the unique id of the blog
-        example: 14611449245875694492
-        format: int64
-      name:
-        type: string
-        description: Name of person
-        example: Atque itaque odit.
-    description: A Blog describes a blog retrieved by the storage service. (default
-      view)
-    example:
-      comments:
-      - comment: Atque minima.
-        id: 14042026595247118519
-      - comment: Atque minima.
-        id: 14042026595247118519
-      - comment: Atque minima.
-        id: 14042026595247118519
-      id: 8745972867205850437
-      name: Sed est dolor magni quia veritatis.
-    required:
-    - id
-    - name
-    - comments
-  StoredCommentResponse:
-    title: StoredCommentResponse
-    type: object
-    properties:
-      comment:
-        type: string
-        description: Comment for the blog
-        example: Enim rerum sed.
-      id:
-        type: integer
-        description: ID of a comment
-        example: 13461490561757903450
-        format: int64
-    description: A blog will have multiple comments
-    example:
-      comment: Saepe voluptas necessitatibus labore nam minus.
-      id: 10392268228296868887
-    required:
-    - id
-    - comment
-  StoredCommentResponseBody:
-    title: StoredCommentResponseBody
-    type: object
-    properties:
-      comment:
-        type: string
-        description: Comment for the blog
-        example: Cumque quia aut explicabo et molestiae.
-      id:
-        type: integer
-        description: ID of a comment
-        example: 1929732356760849941
-        format: int64
-    description: A blog will have multiple comments
-    example:
-      comment: Beatae cum distinctio atque nihil.
-      id: 1306199102508281249
-    required:
-    - id
-    - comment
-  UserCreateDbErrorResponseBody:
+  OauthOauthInternalErrorResponseBody:
     title: 'Mediatype identifier: application/vnd.goa.error; view=default'
     type: object
     properties:
       fault:
         type: boolean
         description: Is the error a server-side fault?
-        example: false
+        example: true
       id:
         type: string
         description: ID is a unique identifier for this particular occurrence of the
@@ -741,14 +648,154 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: false
+        example: true
       timeout:
         type: boolean
         description: Is the error a timeout?
         example: false
+    description: Unable to process request (default view)
+    example:
+      fault: false
+      id: 123abc
+      message: parameter 'p' must be an integer
+      name: bad_request
+      temporary: true
+      timeout: false
+    required:
+    - name
+    - id
+    - message
+    - temporary
+    - timeout
+    - fault
+  OauthOauthRequestBody:
+    title: OauthOauthRequestBody
+    type: object
+    properties:
+      token:
+        type: string
+        description: Access github token
+        example: Saepe qui dolor autem.
+    example:
+      token: Rerum molestiae et iusto aut vel temporibus.
+  StoredBlogResponse:
+    title: 'Mediatype identifier: application/vnd.goa-crud.stored-blog; view=default'
+    type: object
+    properties:
+      comments:
+        type: array
+        items:
+          $ref: '#/definitions/StoredCommentResponse'
+        description: Blog with multiple comments
+        example:
+        - comment: Est placeat.
+          id: 10907177444388360805
+        - comment: Est placeat.
+          id: 10907177444388360805
+        - comment: Est placeat.
+          id: 10907177444388360805
+        - comment: Est placeat.
+          id: 10907177444388360805
+      id:
+        type: integer
+        description: ID is the unique id of the blog
+        example: 8745972867205850437
+        format: int64
+      name:
+        type: string
+        description: Name of person
+        example: Sed est dolor magni quia veritatis.
+    description: A Blog describes a blog retrieved by the storage service. (default
+      view)
+    example:
+      comments:
+      - comment: Est placeat.
+        id: 10907177444388360805
+      - comment: Est placeat.
+        id: 10907177444388360805
+      - comment: Est placeat.
+        id: 10907177444388360805
+      - comment: Est placeat.
+        id: 10907177444388360805
+      id: 1929732356760849941
+      name: Cumque quia aut explicabo et molestiae.
+    required:
+    - id
+    - name
+    - comments
+  StoredCommentResponse:
+    title: StoredCommentResponse
+    type: object
+    properties:
+      comment:
+        type: string
+        description: Comment for the blog
+        example: Commodi corporis rerum deleniti architecto est.
+      id:
+        type: integer
+        description: ID of a comment
+        example: 18055132719716177568
+        format: int64
+    description: A blog will have multiple comments
+    example:
+      comment: Possimus asperiores.
+      id: 11230772451226272559
+    required:
+    - id
+    - comment
+  StoredCommentResponseBody:
+    title: StoredCommentResponseBody
+    type: object
+    properties:
+      comment:
+        type: string
+        description: Comment for the blog
+        example: Nam aspernatur deserunt.
+      id:
+        type: integer
+        description: ID of a comment
+        example: 4962304183412655930
+        format: int64
+    description: A blog will have multiple comments
+    example:
+      comment: Provident necessitatibus architecto ipsa.
+      id: 7305839890619553198
+    required:
+    - id
+    - comment
+  UserCreateDbErrorResponseBody:
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
+    type: object
+    properties:
+      fault:
+        type: boolean
+        description: Is the error a server-side fault?
+        example: true
+      id:
+        type: string
+        description: ID is a unique identifier for this particular occurrence of the
+          problem.
+        example: 123abc
+      message:
+        type: string
+        description: Message is a human-readable explanation specific to this occurrence
+          of the problem.
+        example: parameter 'p' must be an integer
+      name:
+        type: string
+        description: Name is the name of this class of errors.
+        example: bad_request
+      temporary:
+        type: boolean
+        description: Is the error temporary?
+        example: true
+      timeout:
+        type: boolean
+        description: Is the error a timeout?
+        example: true
     description: Unable to process db request (default view)
     example:
-      fault: true
+      fault: false
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
@@ -768,7 +815,7 @@ definitions:
       fault:
         type: boolean
         description: Is the error a server-side fault?
-        example: false
+        example: true
       id:
         type: string
         description: ID is a unique identifier for this particular occurrence of the
@@ -786,7 +833,7 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: false
+        example: true
       timeout:
         type: boolean
         description: Is the error a timeout?
@@ -798,7 +845,7 @@ definitions:
       message: parameter 'p' must be an integer
       name: bad_request
       temporary: false
-      timeout: true
+      timeout: false
     required:
     - name
     - id
@@ -845,19 +892,19 @@ definitions:
       temporary:
         type: boolean
         description: Is the error temporary?
-        example: true
+        example: false
       timeout:
         type: boolean
         description: Is the error a timeout?
         example: true
     description: Unable to process db request (default view)
     example:
-      fault: true
+      fault: false
       id: 123abc
       message: parameter 'p' must be an integer
       name: bad_request
       temporary: false
-      timeout: true
+      timeout: false
     required:
     - name
     - id
@@ -872,28 +919,28 @@ definitions:
       age:
         type: integer
         description: Age of user
-        example: 14528652831057209867
+        example: 5613213975677734833
         format: int64
       class:
         type: string
         description: Class of user
-        example: Architecto dolores ad.
+        example: Voluptatum recusandae.
       id:
         type: integer
         description: ID is the unique id of the user
-        example: 13895089233511992435
+        example: 1853529099852083550
         format: int64
       name:
         type: string
         description: Name of user
-        example: Consectetur consectetur molestiae.
+        example: Sit optio officiis sint eos.
     description: A User describes a user retrieved by the storage service. (default
       view)
     example:
-      age: 2221896610376158327
-      class: Fugiat optio et aut libero nesciunt fugiat.
-      id: 3122857666741473076
-      name: Fugiat laudantium.
+      age: 11417456082914936648
+      class: Vel dolores quis eligendi beatae consequatur velit.
+      id: 17297640056316739497
+      name: Repudiandae numquam voluptatum nisi inventore laudantium et.
     required:
     - name
     - age
@@ -905,28 +952,28 @@ definitions:
       age:
         type: integer
         description: Age of user
-        example: 15239164917393232462
+        example: 723926494176722675
         format: int64
       class:
         type: string
         description: Class of user
-        example: Recusandae officiis autem.
+        example: Enim veniam libero aperiam.
       id:
         type: integer
         description: ID is the unique id of the user
-        example: 15301857737020518312
+        example: 16345046108880669643
         format: int64
       name:
         type: string
         description: Name of user
-        example: Officiis sint eos quisquam.
+        example: Aut magnam quia quibusdam architecto sint.
     description: A User describes a user retrieved by the storage service. (default
       view)
     example:
-      age: 6469214100147636234
-      class: Quisquam vel dolores quis eligendi beatae.
-      id: 3016746933722887550
-      name: Voluptatum nisi inventore laudantium.
+      age: 8040078393600807519
+      class: Ipsa officiis.
+      id: 7736250100465945102
+      name: Neque asperiores et nostrum.
     required:
     - name
     - age

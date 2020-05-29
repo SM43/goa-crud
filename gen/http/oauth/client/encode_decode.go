@@ -52,6 +52,9 @@ func EncodeOauthRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.
 // DecodeOauthResponse returns a decoder for responses returned by the oauth
 // oauth endpoint. restoreBody controls whether the response body should be
 // restored after having been read.
+// DecodeOauthResponse may return the following errors:
+//	- "internal_error" (type *goa.ServiceError): http.StatusInternalServerError
+//	- error: internal error
 func DecodeOauthResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
 	return func(resp *http.Response) (interface{}, error) {
 		if restoreBody {
@@ -77,6 +80,20 @@ func DecodeOauthResponse(decoder func(*http.Response) goahttp.Decoder, restoreBo
 				return nil, goahttp.ErrDecodingError("oauth", "oauth", err)
 			}
 			return body, nil
+		case http.StatusInternalServerError:
+			var (
+				body OauthInternalErrorResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("oauth", "oauth", err)
+			}
+			err = ValidateOauthInternalErrorResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("oauth", "oauth", err)
+			}
+			return nil, NewOauthInternalError(&body)
 		default:
 			body, _ := ioutil.ReadAll(resp.Body)
 			return nil, goahttp.ErrInvalidResponse("oauth", "oauth", resp.StatusCode, string(body))

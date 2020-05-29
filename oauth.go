@@ -25,6 +25,7 @@ func NewOauth(db *gorm.DB, logger *log.Logger) oauth.Service {
 	return &oauthsrvc{db, logger}
 }
 
+// OAuthAccessResponse will have user's access token returned by GH
 type OAuthAccessResponse struct {
 	AccessToken string `json:"access_token"`
 }
@@ -38,7 +39,6 @@ var users = make([]userDetails, 0)
 
 // Github authentication to post a new blog
 func (s *oauthsrvc) Oauth(ctx context.Context, p *oauth.OauthPayload) (res string, err error) {
-
 	reqURL := ghOAuthURLForCode(*p.Token)
 
 	req, err := http.NewRequest(http.MethodPost, reqURL, nil)
@@ -63,17 +63,12 @@ func (s *oauthsrvc) Oauth(ctx context.Context, p *oauth.OauthPayload) (res strin
 
 	username, id := getUserDetails(t.AccessToken)
 
-	s.logger.Println("Username ", username)
-	s.logger.Println(id)
-
 	data := userDetails{id: id, email: username}
 
 	users = append(users, data)
 	s.logger.Println("Users", users)
 
 	jwtToken := GenerateJWT(id, username)
-
-	s.logger.Println("Jwt token: ", jwtToken)
 
 	return jwtToken, nil
 }

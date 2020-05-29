@@ -39,19 +39,19 @@ func UsageExamples() string {
       "blog": {
          "comments": [
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             },
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             },
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             }
          ],
-         "name": "Sed et aut voluptatem et voluptas."
+         "name": "Nihil consequatur sunt asperiores."
       }
    }' --auth "Ullam voluptate excepturi totam ducimus."` + "\n" +
 		os.Args[0] + ` user create --body '{
@@ -61,7 +61,7 @@ func UsageExamples() string {
          "id": 9607508899083994649,
          "name": "Provident perspiciatis accusamus vel nam."
       }
-   }' --auth "Esse ut ut occaecati."` + "\n" +
+   }' --auth "Enim architecto consequatur."` + "\n" +
 		""
 }
 
@@ -312,19 +312,19 @@ Example:
       "blog": {
          "comments": [
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             },
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             },
             {
-               "comment": "Asperiores natus iste eaque iure velit.",
-               "id": 15837338112645027660
+               "comment": "Iure velit.",
+               "id": 8779553980399303872
             }
          ],
-         "name": "Sed et aut voluptatem et voluptas."
+         "name": "Nihil consequatur sunt asperiores."
       }
    }' --auth "Ullam voluptate excepturi totam ducimus."
 `, os.Args[0])
@@ -347,7 +347,7 @@ Show blog based on the id given
     -id UINT: ID of the blog to be fetched
 
 Example:
-    `+os.Args[0]+` blog show --id 3723687285656444484
+    `+os.Args[0]+` blog show --id 1685340132462609181
 `, os.Args[0])
 }
 
@@ -358,7 +358,7 @@ Delete a blog
     -id UINT: ID of blog to remove
 
 Example:
-    `+os.Args[0]+` blog remove --id 7756890201828965410
+    `+os.Args[0]+` blog remove --id 8109795710196175397
 `, os.Args[0])
 }
 
@@ -372,10 +372,10 @@ Add a new comment for a blog
 Example:
     `+os.Args[0]+` blog add --body '{
       "comments": {
-         "comment": "Asperiores natus iste eaque iure velit.",
-         "id": 15837338112645027660
+         "comment": "Iure velit.",
+         "id": 8779553980399303872
       }
-   }' --id 8109795710196175397
+   }' --id 16849553098629863428
 `, os.Args[0])
 }
 
@@ -408,7 +408,7 @@ Example:
          "id": 9607508899083994649,
          "name": "Provident perspiciatis accusamus vel nam."
       }
-   }' --auth "Esse ut ut occaecati."
+   }' --auth "Enim architecto consequatur."
 `, os.Args[0])
 }
 

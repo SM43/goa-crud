@@ -5,19 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/mitchellh/mapstructure"
 )
 
-// Claims Object to decode JWT
-type Claims struct {
-	Authorized bool   `json:"authorized"`
-	ID         int    `json:"id"`
-	Username   string `json:"username"`
-}
-
+// GenerateJWT will return JWT string
 func GenerateJWT(id int, username string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"nbf":      time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
@@ -40,23 +34,24 @@ func GenerateJWT(id int, username string) string {
 	return jwtToken
 }
 
+// VerifyJWT will verifies user's JWT
 func VerifyJWT(token string) error {
-
 	jwtSecretKey, exists := os.LookupEnv("JWT_SECRET_KEY")
 	if !exists {
-		log.Println("Environment variable not found")
+		return errors.New("JWT Secret key not found")
 	}
-	var c Claims
-	parsedToken, _ := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+	splitToken := strings.Split(token, "Bearer ")
+	reqToken := splitToken[1]
+
+	parsedToken, _ := jwt.Parse(reqToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Failed to Decode JWT")
 		}
 		return []byte(jwtSecretKey), nil
 	})
-	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
-		mapstructure.Decode(claims, &c)
-	} else {
-		return errors.New("Invalid JWT")
+	if _, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		fmt.Println("Valid JWT")
+		return nil
 	}
-	return nil
+	return errors.New("Invalid JWT")
 }

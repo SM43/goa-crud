@@ -206,7 +206,7 @@ func NewCORSHandler() http.Handler {
 // handleUserOrigin applies the CORS response headers corresponding to the
 // origin for the service user.
 func handleUserOrigin(h http.Handler) http.Handler {
-	spec0 := regexp.MustCompile(".*localhost")
+	spec0 := regexp.MustCompile(".*localhost.*")
 	origHndlr := h.(http.HandlerFunc)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
@@ -224,7 +224,7 @@ func handleUserOrigin(h http.Handler) http.Handler {
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
-				w.Header().Set("Access-Control-Allow-Headers", "X-Shared-Secret")
+				w.Header().Set("Access-Control-Allow-Headers", "*")
 			}
 			origHndlr(w, r)
 			return

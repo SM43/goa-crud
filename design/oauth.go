@@ -5,6 +5,8 @@ import . "goa.design/goa/v3/dsl"
 var _ = Service("oauth", func() {
 	Description("The oauth service authorise user to access other APIs")
 
+	Error("internal_error", ErrorResult, "Unable to process request")
+
 	Method("oauth", func() {
 		Description("Github authentication to post a new blog")
 		Payload(func() {
@@ -14,6 +16,7 @@ var _ = Service("oauth", func() {
 		HTTP(func() {
 			POST("/oauth/redirect")
 			Response(StatusOK)
+			Response("internal_error", StatusInternalServerError)
 		})
 
 	})

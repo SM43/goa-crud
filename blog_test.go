@@ -111,11 +111,12 @@ func Test_Create(t *testing.T) {
 		{Comment: "Movie"},
 	}
 	b := &blog.Blog{Name: "Karwaan", Comments: c}
-	err := test.blogSvc.Create(context.Background(), b)
+	payload := &blog.CreatePayload{Blog: b, Auth: ""}
+	err := test.blogSvc.Create(context.Background(), payload)
 	assert.NoError(t, err)
 
 	// If the Blog already exist, expect error
-	err = test.blogSvc.Create(context.Background(), b)
+	err = test.blogSvc.Create(context.Background(), payload)
 	assert.Error(t, err)
 
 }

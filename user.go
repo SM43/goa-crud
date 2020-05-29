@@ -23,12 +23,11 @@ func NewUser(db *gorm.DB, logger *log.Logger) user.Service {
 
 // Add a new blog
 func (s *usersrvc) Create(ctx context.Context, p *user.CreatePayload) (err error) {
-	// err = VerifyJWT(p.Auth)
-	// if err != nil {
-	// 	s.logger.Println("Invalid user", err.Error())
-	// 	return user.MakeInvalidToken(fmt.Errorf(err.Error()))
-	// }
-
+	err = VerifyJWT(p.Auth)
+	if err != nil {
+		s.logger.Println("Invalid user", err.Error())
+		return user.MakeInvalidToken(fmt.Errorf(err.Error()))
+	}
 	userObj := &User{Name: p.User.Name, Age: p.User.Age, Class: p.User.Class}
 	if err = s.db.Create(userObj).Error; err != nil {
 		s.logger.Println("Db error ", err.Error())
@@ -44,7 +43,6 @@ func (s *usersrvc) List(ctx context.Context) (res []*user.User, err error) {
 	if err = s.db.Find(&all).Error; err != nil {
 		return nil, user.MakeDbError(fmt.Errorf(err.Error()))
 	}
-
 	for _, r := range all {
 		id := r.ID
 		res = append(res, &user.User{
@@ -54,6 +52,5 @@ func (s *usersrvc) List(ctx context.Context) (res []*user.User, err error) {
 			Class: r.Class,
 		})
 	}
-
 	return res, nil
 }

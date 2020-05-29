@@ -9,6 +9,8 @@ package oauth
 
 import (
 	"context"
+
+	goa "goa.design/goa/v3/pkg"
 )
 
 // The oauth service authorise user to access other APIs
@@ -31,4 +33,13 @@ var MethodNames = [1]string{"oauth"}
 type OauthPayload struct {
 	// Access github token
 	Token *string
+}
+
+// MakeInternalError builds a goa.ServiceError from an error.
+func MakeInternalError(err error) *goa.ServiceError {
+	return &goa.ServiceError{
+		Name:    "internal_error",
+		ID:      goa.NewErrorID(),
+		Message: err.Error(),
+	}
 }
