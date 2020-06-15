@@ -6,3 +6,186 @@
 // $ goa gen github.com/sm43/goa-crud/design
 
 package client
+
+import (
+	"bytes"
+	"context"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+
+	swagger "github.com/sm43/goa-crud/gen/swagger"
+	swaggerviews "github.com/sm43/goa-crud/gen/swagger/views"
+	goahttp "goa.design/goa/v3/http"
+)
+
+// BuildSm1Request instantiates a HTTP request object with method and path set
+// to call the "swagger" service "sm1" endpoint
+func (c *Client) BuildSm1Request(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: Sm1SwaggerPath()}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("swagger", "sm1", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// DecodeSm1Response returns a decoder for responses returned by the swagger
+// sm1 endpoint. restoreBody controls whether the response body should be
+// restored after having been read.
+func DecodeSm1Response(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusCreated:
+			var (
+				body Sm1ResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("swagger", "sm1", err)
+			}
+			p := NewSm1ResourceCreated(&body)
+			view := "default"
+			vres := &swaggerviews.Resource{Projected: p, View: view}
+			if err = swaggerviews.ValidateResource(vres); err != nil {
+				return nil, goahttp.ErrValidationError("swagger", "sm1", err)
+			}
+			res := swagger.NewResource(vres)
+			return res, nil
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("swagger", "sm1", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// BuildSm2Request instantiates a HTTP request object with method and path set
+// to call the "swagger" service "sm2" endpoint
+func (c *Client) BuildSm2Request(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: Sm2SwaggerPath()}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("swagger", "sm2", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// DecodeSm2Response returns a decoder for responses returned by the swagger
+// sm2 endpoint. restoreBody controls whether the response body should be
+// restored after having been read.
+func DecodeSm2Response(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusCreated:
+			var (
+				body Sm2ResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("swagger", "sm2", err)
+			}
+			p := NewSm2ResourceCreated(&body)
+			view := "default"
+			vres := &swaggerviews.Resource{Projected: p, View: view}
+			if err = swaggerviews.ValidateResource(vres); err != nil {
+				return nil, goahttp.ErrValidationError("swagger", "sm2", err)
+			}
+			res := swagger.NewResource(vres)
+			return res, nil
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("swagger", "sm2", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// BuildSm3Request instantiates a HTTP request object with method and path set
+// to call the "swagger" service "sm3" endpoint
+func (c *Client) BuildSm3Request(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: Sm3SwaggerPath()}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("swagger", "sm3", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// DecodeSm3Response returns a decoder for responses returned by the swagger
+// sm3 endpoint. restoreBody controls whether the response body should be
+// restored after having been read.
+func DecodeSm3Response(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusCreated:
+			var (
+				body Sm3ResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("swagger", "sm3", err)
+			}
+			p := NewSm3ResourceCreated(&body)
+			view := "default"
+			vres := &swaggerviews.Resource{Projected: p, View: view}
+			if err = swaggerviews.ValidateResource(vres); err != nil {
+				return nil, goahttp.ErrValidationError("swagger", "sm3", err)
+			}
+			res := swagger.NewResource(vres)
+			return res, nil
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("swagger", "sm3", resp.StatusCode, string(body))
+		}
+	}
+}

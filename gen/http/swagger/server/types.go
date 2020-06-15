@@ -6,3 +6,73 @@
 // $ goa gen github.com/sm43/goa-crud/design
 
 package server
+
+import (
+	swaggerviews "github.com/sm43/goa-crud/gen/swagger/views"
+)
+
+// Sm1ResponseBody is the type of the "swagger" service "sm1" endpoint HTTP
+// response body.
+type Sm1ResponseBody struct {
+	// ID is the unique id of the resource
+	ID uint `form:"id" json:"id" xml:"id"`
+	// Name of the resource
+	Name string `form:"name" json:"name" xml:"name"`
+	// Type of resource
+	Type string `form:"type" json:"type" xml:"type"`
+	// Rating of resource
+	Rating uint `form:"rating" json:"rating" xml:"rating"`
+}
+
+// Sm2ResponseBodyExtended is the type of the "swagger" service "sm2" endpoint
+// HTTP response body.
+type Sm2ResponseBodyExtended struct {
+	// ID is the unique id of the resource
+	ID uint `form:"id" json:"id" xml:"id"`
+	// Name of the resource
+	Name string `form:"name" json:"name" xml:"name"`
+}
+
+// Sm3ResponseBodyDesc is the type of the "swagger" service "sm3" endpoint HTTP
+// response body.
+type Sm3ResponseBodyDesc struct {
+	// ID is the unique id of the resource
+	ID uint `form:"id" json:"id" xml:"id"`
+	// Name of the resource
+	Name string `form:"name" json:"name" xml:"name"`
+	// Rating of resource
+	Rating uint `form:"rating" json:"rating" xml:"rating"`
+}
+
+// NewSm1ResponseBody builds the HTTP response body from the result of the
+// "sm1" endpoint of the "swagger" service.
+func NewSm1ResponseBody(res *swaggerviews.ResourceView) *Sm1ResponseBody {
+	body := &Sm1ResponseBody{
+		ID:     *res.ID,
+		Name:   *res.Name,
+		Type:   *res.Type,
+		Rating: *res.Rating,
+	}
+	return body
+}
+
+// NewSm2ResponseBodyExtended builds the HTTP response body from the result of
+// the "sm2" endpoint of the "swagger" service.
+func NewSm2ResponseBodyExtended(res *swaggerviews.ResourceView) *Sm2ResponseBodyExtended {
+	body := &Sm2ResponseBodyExtended{
+		ID:   *res.ID,
+		Name: *res.Name,
+	}
+	return body
+}
+
+// NewSm3ResponseBodyDesc builds the HTTP response body from the result of the
+// "sm3" endpoint of the "swagger" service.
+func NewSm3ResponseBodyDesc(res *swaggerviews.ResourceView) *Sm3ResponseBodyDesc {
+	body := &Sm3ResponseBodyDesc{
+		ID:     *res.ID,
+		Name:   *res.Name,
+		Rating: *res.Rating,
+	}
+	return body
+}

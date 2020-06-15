@@ -12,13 +12,14 @@ import (
 	"sync"
 
 	"github.com/jinzhu/gorm"
-	// Blank for package side effect: loads postgres drivers
-	"github.com/joho/godotenv"
+	// Import
 	_ "github.com/lib/pq"
+
+	"github.com/joho/godotenv"
 	blogapi "github.com/sm43/goa-crud"
 	blog "github.com/sm43/goa-crud/gen/blog"
 	oauth "github.com/sm43/goa-crud/gen/oauth"
-	user "github.com/sm43/goa-crud/gen/user"
+	swagger "github.com/sm43/goa-crud/gen/swagger"
 )
 
 func main() {
@@ -62,31 +63,34 @@ func main() {
 		defer db.Close()
 		db.LogMode(true)
 		db.AutoMigrate(blogapi.Blog{}, blogapi.Comment{}, blogapi.User{})
+
 	}
 
 	// Initialize the services.
 	var (
 		oauthSvc oauth.Service
 		blogSvc  blog.Service
-		userSvc  user.Service
+		// userSvc  user.Service
+		swaggerSvc swagger.Service
 	)
 	{
 		oauthSvc = blogapi.NewOauth(db, logger)
 		blogSvc = blogapi.NewBlog(db, logger)
-		userSvc = blogapi.NewUser(db, logger)
+		// userSvc = blogapi.NewUser(db, logger)
+		swaggerSvc = blogapi.NewSwagger(logger)
 	}
 
 	// Wrap the services in endpoints that can be invoked from other services
 	// potentially running in different processes.
 	var (
-		oauthEndpoints *oauth.Endpoints
-		blogEndpoints  *blog.Endpoints
-		userEndpoints  *user.Endpoints
+		oauthEndpoints   *oauth.Endpoints
+		blogEndpoints    *blog.Endpoints
+		swaggerEndpoints *swagger.Endpoints
 	)
 	{
 		oauthEndpoints = oauth.NewEndpoints(oauthSvc)
 		blogEndpoints = blog.NewEndpoints(blogSvc)
-		userEndpoints = user.NewEndpoints(userSvc)
+		swaggerEndpoints = swagger.NewEndpoints(swaggerSvc)
 	}
 
 	// Create channel used by both the signal handler and server goroutines
@@ -126,7 +130,7 @@ func main() {
 			} else if u.Port() == "" {
 				u.Host += ":80"
 			}
-			handleHTTPServer(ctx, u, oauthEndpoints, blogEndpoints, userEndpoints, &wg, errc, logger, *dbgF)
+			handleHTTPServer(ctx, u, oauthEndpoints, blogEndpoints, swaggerEndpoints, &wg, errc, logger, *dbgF)
 		}
 
 	default:

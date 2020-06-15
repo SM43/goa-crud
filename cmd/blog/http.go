@@ -13,9 +13,8 @@ import (
 	blogsvr "github.com/sm43/goa-crud/gen/http/blog/server"
 	oauthsvr "github.com/sm43/goa-crud/gen/http/oauth/server"
 	swaggersvr "github.com/sm43/goa-crud/gen/http/swagger/server"
-	usersvr "github.com/sm43/goa-crud/gen/http/user/server"
 	oauth "github.com/sm43/goa-crud/gen/oauth"
-	user "github.com/sm43/goa-crud/gen/user"
+	swagger "github.com/sm43/goa-crud/gen/swagger"
 	goahttp "goa.design/goa/v3/http"
 	httpmdlwr "goa.design/goa/v3/http/middleware"
 	"goa.design/goa/v3/middleware"
@@ -23,7 +22,7 @@ import (
 
 // handleHTTPServer starts configures and starts a HTTP server on the given
 // URL. It shuts down the server if any error is received in the error channel.
-func handleHTTPServer(ctx context.Context, u *url.URL, oauthEndpoints *oauth.Endpoints, blogEndpoints *blog.Endpoints, userEndpoints *user.Endpoints, wg *sync.WaitGroup, errc chan error, logger *log.Logger, debug bool) {
+func handleHTTPServer(ctx context.Context, u *url.URL, oauthEndpoints *oauth.Endpoints, blogEndpoints *blog.Endpoints, swaggerEndpoints *swagger.Endpoints, wg *sync.WaitGroup, errc chan error, logger *log.Logger, debug bool) {
 
 	// Setup goa log adapter.
 	var (
@@ -56,20 +55,17 @@ func handleHTTPServer(ctx context.Context, u *url.URL, oauthEndpoints *oauth.End
 	var (
 		oauthServer   *oauthsvr.Server
 		blogServer    *blogsvr.Server
-		userServer    *usersvr.Server
 		swaggerServer *swaggersvr.Server
 	)
 	{
 		eh := errorHandler(logger)
 		oauthServer = oauthsvr.New(oauthEndpoints, mux, dec, enc, eh, nil)
 		blogServer = blogsvr.New(blogEndpoints, mux, dec, enc, eh, nil)
-		userServer = usersvr.New(userEndpoints, mux, dec, enc, eh, nil)
-		swaggerServer = swaggersvr.New(nil, mux, dec, enc, eh, nil)
+		swaggerServer = swaggersvr.New(swaggerEndpoints, mux, dec, enc, eh, nil)
 		if debug {
 			servers := goahttp.Servers{
 				oauthServer,
 				blogServer,
-				userServer,
 				swaggerServer,
 			}
 			servers.Use(httpmdlwr.Debug(mux, os.Stdout))
@@ -78,7 +74,6 @@ func handleHTTPServer(ctx context.Context, u *url.URL, oauthEndpoints *oauth.End
 	// Configure the mux.
 	oauthsvr.Mount(mux, oauthServer)
 	blogsvr.Mount(mux, blogServer)
-	usersvr.Mount(mux, userServer)
 	swaggersvr.Mount(mux, swaggerServer)
 
 	// Wrap the multiplexer with additional middlewares. Middlewares mounted
@@ -87,7 +82,6 @@ func handleHTTPServer(ctx context.Context, u *url.URL, oauthEndpoints *oauth.End
 	{
 		handler = httpmdlwr.Log(adapter)(handler)
 		handler = httpmdlwr.RequestID()(handler)
-	
 	}
 
 	// Start HTTP server using default configuration, change the code to

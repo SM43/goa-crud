@@ -163,18 +163,46 @@ paths:
             $ref: '#/definitions/OauthOauthInternalErrorResponseBody'
       schemes:
       - http
-  /swagger/swagger.json:
-    get:
+  /sma:
+    post:
       tags:
       - swagger
-      summary: Download gen/http/openapi.json
-      description: JSON document containing the API swagger definition
-      operationId: swagger#/swagger/swagger.json
+      summary: sm1 swagger
+      description: Add a new blog
+      operationId: swagger#sm1
       responses:
-        "200":
-          description: File downloaded
+        "201":
+          description: Created response.
           schema:
-            type: file
+            $ref: '#/definitions/SwaggerSm1ResponseBody'
+      schemes:
+      - http
+  /smb:
+    post:
+      tags:
+      - swagger
+      summary: sm2 swagger
+      description: Add a new blog
+      operationId: swagger#sm2
+      responses:
+        "201":
+          description: Created response.
+          schema:
+            $ref: '#/definitions/SwaggerSm2ResponseBodyExtended'
+      schemes:
+      - http
+  /smc:
+    post:
+      tags:
+      - swagger
+      summary: sm3 swagger
+      description: Add a new blog
+      operationId: swagger#sm3
+      responses:
+        "201":
+          description: Created response.
+          schema:
+            $ref: '#/definitions/SwaggerSm3ResponseBodyDesc'
       schemes:
       - http
   /user:
@@ -763,6 +791,86 @@ definitions:
     required:
     - id
     - comment
+  SwaggerSm1ResponseBody:
+    title: 'Mediatype identifier: application/vnd.hub.resource; view=default'
+    type: object
+    properties:
+      id:
+        type: integer
+        description: ID is the unique id of the resource
+        example: 1
+        format: int64
+      name:
+        type: string
+        description: Name of the resource
+        example: golang
+      rating:
+        type: integer
+        description: Rating of resource
+        example: 5
+        format: int64
+      type:
+        type: string
+        description: Type of resource
+        example: task
+    description: Sm1ResponseBody result type (default view)
+    example:
+      id: 1
+      name: golang
+      rating: 5
+      type: task
+    required:
+    - id
+    - name
+    - type
+    - rating
+  SwaggerSm2ResponseBodyExtended:
+    title: 'Mediatype identifier: application/vnd.hub.resource; view=extended'
+    type: object
+    properties:
+      id:
+        type: integer
+        description: ID is the unique id of the resource
+        example: 1
+        format: int64
+      name:
+        type: string
+        description: Name of the resource
+        example: golang
+    description: Sm2ResponseBody result type (extended view) (default view)
+    example:
+      id: 1
+      name: golang
+    required:
+    - id
+    - name
+  SwaggerSm3ResponseBodyDesc:
+    title: 'Mediatype identifier: application/vnd.hub.resource; view=desc'
+    type: object
+    properties:
+      id:
+        type: integer
+        description: ID is the unique id of the resource
+        example: 1
+        format: int64
+      name:
+        type: string
+        description: Name of the resource
+        example: golang
+      rating:
+        type: integer
+        description: Rating of resource
+        example: 5
+        format: int64
+    description: Sm3ResponseBody result type (desc view) (default view)
+    example:
+      id: 1
+      name: golang
+      rating: 5
+    required:
+    - id
+    - name
+    - rating
   UserCreateDbErrorResponseBody:
     title: 'Mediatype identifier: application/vnd.goa.error; view=default'
     type: object

@@ -7,8 +7,20 @@
 
 package swagger
 
+import (
+	"context"
+
+	swaggerviews "github.com/sm43/goa-crud/gen/swagger/views"
+)
+
 // The swagger service serves the API swagger definition.
 type Service interface {
+	// Add a new blog
+	Sm1(context.Context) (res *Resource, err error)
+	// Add a new blog
+	Sm2(context.Context) (res *Resource, err error)
+	// Add a new blog
+	Sm3(context.Context) (res *Resource, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -19,4 +31,128 @@ const ServiceName = "swagger"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [0]string{}
+var MethodNames = [3]string{"sm1", "sm2", "sm3"}
+
+// Resource is the result type of the swagger service sm1 method.
+type Resource struct {
+	// ID is the unique id of the resource
+	ID uint
+	// Name of the resource
+	Name string
+	// Type of resource
+	Type string
+	// Rating of resource
+	Rating uint
+}
+
+// NewResource initializes result type Resource from viewed result type
+// Resource.
+func NewResource(vres *swaggerviews.Resource) *Resource {
+	var res *Resource
+	switch vres.View {
+	case "extended":
+		res = newResourceExtended(vres.Projected)
+	case "desc":
+		res = newResourceDesc(vres.Projected)
+	case "default", "":
+		res = newResource(vres.Projected)
+	}
+	return res
+}
+
+// NewViewedResource initializes viewed result type Resource from result type
+// Resource using the given view.
+func NewViewedResource(res *Resource, view string) *swaggerviews.Resource {
+	var vres *swaggerviews.Resource
+	switch view {
+	case "extended":
+		p := newResourceViewExtended(res)
+		vres = &swaggerviews.Resource{Projected: p, View: "extended"}
+	case "desc":
+		p := newResourceViewDesc(res)
+		vres = &swaggerviews.Resource{Projected: p, View: "desc"}
+	case "default", "":
+		p := newResourceView(res)
+		vres = &swaggerviews.Resource{Projected: p, View: "default"}
+	}
+	return vres
+}
+
+// newResourceExtended converts projected type Resource to service type
+// Resource.
+func newResourceExtended(vres *swaggerviews.ResourceView) *Resource {
+	res := &Resource{}
+	if vres.ID != nil {
+		res.ID = *vres.ID
+	}
+	if vres.Name != nil {
+		res.Name = *vres.Name
+	}
+	return res
+}
+
+// newResourceDesc converts projected type Resource to service type Resource.
+func newResourceDesc(vres *swaggerviews.ResourceView) *Resource {
+	res := &Resource{}
+	if vres.ID != nil {
+		res.ID = *vres.ID
+	}
+	if vres.Name != nil {
+		res.Name = *vres.Name
+	}
+	if vres.Rating != nil {
+		res.Rating = *vres.Rating
+	}
+	return res
+}
+
+// newResource converts projected type Resource to service type Resource.
+func newResource(vres *swaggerviews.ResourceView) *Resource {
+	res := &Resource{}
+	if vres.ID != nil {
+		res.ID = *vres.ID
+	}
+	if vres.Name != nil {
+		res.Name = *vres.Name
+	}
+	if vres.Type != nil {
+		res.Type = *vres.Type
+	}
+	if vres.Rating != nil {
+		res.Rating = *vres.Rating
+	}
+	return res
+}
+
+// newResourceViewExtended projects result type Resource to projected type
+// ResourceView using the "extended" view.
+func newResourceViewExtended(res *Resource) *swaggerviews.ResourceView {
+	vres := &swaggerviews.ResourceView{
+		ID:   &res.ID,
+		Name: &res.Name,
+	}
+	return vres
+}
+
+// newResourceViewDesc projects result type Resource to projected type
+// ResourceView using the "desc" view.
+func newResourceViewDesc(res *Resource) *swaggerviews.ResourceView {
+	vres := &swaggerviews.ResourceView{
+		ID:     &res.ID,
+		Name:   &res.Name,
+		Rating: &res.Rating,
+	}
+	return vres
+}
+
+// newResourceView projects result type Resource to projected type ResourceView
+// using the "default" view.
+func newResourceView(res *Resource) *swaggerviews.ResourceView {
+	vres := &swaggerviews.ResourceView{
+		ID:     &res.ID,
+		Name:   &res.Name,
+		Type:   &res.Type,
+		Rating: &res.Rating,
+	}
+	return vres
+}

@@ -15,6 +15,7 @@ import (
 
 	blogc "github.com/sm43/goa-crud/gen/http/blog/client"
 	oauthc "github.com/sm43/goa-crud/gen/http/oauth/client"
+	swaggerc "github.com/sm43/goa-crud/gen/http/swagger/client"
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
@@ -25,6 +26,7 @@ import (
 //
 func UsageCommands() string {
 	return `oauth oauth
+swagger (sm1|sm2|sm3)
 blog (create|list|show|remove|add)
 user (create|list)
 `
@@ -35,6 +37,7 @@ func UsageExamples() string {
 	return os.Args[0] + ` oauth oauth --body '{
       "token": "Non eaque omnis."
    }'` + "\n" +
+		os.Args[0] + ` swagger sm1` + "\n" +
 		os.Args[0] + ` blog create --body '{
       "blog": {
          "comments": [
@@ -80,6 +83,14 @@ func ParseEndpoint(
 		oauthOauthFlags    = flag.NewFlagSet("oauth", flag.ExitOnError)
 		oauthOauthBodyFlag = oauthOauthFlags.String("body", "REQUIRED", "")
 
+		swaggerFlags = flag.NewFlagSet("swagger", flag.ContinueOnError)
+
+		swaggerSm1Flags = flag.NewFlagSet("sm1", flag.ExitOnError)
+
+		swaggerSm2Flags = flag.NewFlagSet("sm2", flag.ExitOnError)
+
+		swaggerSm3Flags = flag.NewFlagSet("sm3", flag.ExitOnError)
+
 		blogFlags = flag.NewFlagSet("blog", flag.ContinueOnError)
 
 		blogCreateFlags    = flag.NewFlagSet("create", flag.ExitOnError)
@@ -109,6 +120,11 @@ func ParseEndpoint(
 	oauthFlags.Usage = oauthUsage
 	oauthOauthFlags.Usage = oauthOauthUsage
 
+	swaggerFlags.Usage = swaggerUsage
+	swaggerSm1Flags.Usage = swaggerSm1Usage
+	swaggerSm2Flags.Usage = swaggerSm2Usage
+	swaggerSm3Flags.Usage = swaggerSm3Usage
+
 	blogFlags.Usage = blogUsage
 	blogCreateFlags.Usage = blogCreateUsage
 	blogListFlags.Usage = blogListUsage
@@ -137,6 +153,8 @@ func ParseEndpoint(
 		switch svcn {
 		case "oauth":
 			svcf = oauthFlags
+		case "swagger":
+			svcf = swaggerFlags
 		case "blog":
 			svcf = blogFlags
 		case "user":
@@ -160,6 +178,19 @@ func ParseEndpoint(
 			switch epn {
 			case "oauth":
 				epf = oauthOauthFlags
+
+			}
+
+		case "swagger":
+			switch epn {
+			case "sm1":
+				epf = swaggerSm1Flags
+
+			case "sm2":
+				epf = swaggerSm2Flags
+
+			case "sm3":
+				epf = swaggerSm3Flags
 
 			}
 
@@ -218,6 +249,19 @@ func ParseEndpoint(
 			case "oauth":
 				endpoint = c.Oauth()
 				data, err = oauthc.BuildOauthPayload(*oauthOauthBodyFlag)
+			}
+		case "swagger":
+			c := swaggerc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "sm1":
+				endpoint = c.Sm1()
+				data = nil
+			case "sm2":
+				endpoint = c.Sm2()
+				data = nil
+			case "sm3":
+				endpoint = c.Sm3()
+				data = nil
 			}
 		case "blog":
 			c := blogc.NewClient(scheme, host, doer, enc, dec, restore)
@@ -280,6 +324,51 @@ Example:
     `+os.Args[0]+` oauth oauth --body '{
       "token": "Non eaque omnis."
    }'
+`, os.Args[0])
+}
+
+// swaggerUsage displays the usage of the swagger command and its subcommands.
+func swaggerUsage() {
+	fmt.Fprintf(os.Stderr, `The swagger service serves the API swagger definition.
+Usage:
+    %s [globalflags] swagger COMMAND [flags]
+
+COMMAND:
+    sm1: Add a new blog
+    sm2: Add a new blog
+    sm3: Add a new blog
+
+Additional help:
+    %s swagger COMMAND --help
+`, os.Args[0], os.Args[0])
+}
+func swaggerSm1Usage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] swagger sm1
+
+Add a new blog
+
+Example:
+    `+os.Args[0]+` swagger sm1
+`, os.Args[0])
+}
+
+func swaggerSm2Usage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] swagger sm2
+
+Add a new blog
+
+Example:
+    `+os.Args[0]+` swagger sm2
+`, os.Args[0])
+}
+
+func swaggerSm3Usage() {
+	fmt.Fprintf(os.Stderr, `%s [flags] swagger sm3
+
+Add a new blog
+
+Example:
+    `+os.Args[0]+` swagger sm3
 `, os.Args[0])
 }
 

@@ -6,3 +6,18 @@
 // $ goa gen github.com/sm43/goa-crud/design
 
 package server
+
+// Sm1SwaggerPath returns the URL path to the swagger service sm1 HTTP endpoint.
+func Sm1SwaggerPath() string {
+	return "/sma"
+}
+
+// Sm2SwaggerPath returns the URL path to the swagger service sm2 HTTP endpoint.
+func Sm2SwaggerPath() string {
+	return "/smb"
+}
+
+// Sm3SwaggerPath returns the URL path to the swagger service sm3 HTTP endpoint.
+func Sm3SwaggerPath() string {
+	return "/smc"
+}

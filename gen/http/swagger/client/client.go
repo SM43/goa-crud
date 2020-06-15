@@ -8,13 +8,24 @@
 package client
 
 import (
+	"context"
 	"net/http"
 
 	goahttp "goa.design/goa/v3/http"
+	goa "goa.design/goa/v3/pkg"
 )
 
 // Client lists the swagger service endpoint HTTP clients.
 type Client struct {
+	// Sm1 Doer is the HTTP client used to make requests to the sm1 endpoint.
+	Sm1Doer goahttp.Doer
+
+	// Sm2 Doer is the HTTP client used to make requests to the sm2 endpoint.
+	Sm2Doer goahttp.Doer
+
+	// Sm3 Doer is the HTTP client used to make requests to the sm3 endpoint.
+	Sm3Doer goahttp.Doer
+
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
 
@@ -38,11 +49,71 @@ func NewClient(
 	restoreBody bool,
 ) *Client {
 	return &Client{
+		Sm1Doer:             doer,
+		Sm2Doer:             doer,
+		Sm3Doer:             doer,
 		CORSDoer:            doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
 		host:                host,
 		decoder:             dec,
 		encoder:             enc,
+	}
+}
+
+// Sm1 returns an endpoint that makes HTTP requests to the swagger service sm1
+// server.
+func (c *Client) Sm1() goa.Endpoint {
+	var (
+		decodeResponse = DecodeSm1Response(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildSm1Request(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.Sm1Doer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("swagger", "sm1", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// Sm2 returns an endpoint that makes HTTP requests to the swagger service sm2
+// server.
+func (c *Client) Sm2() goa.Endpoint {
+	var (
+		decodeResponse = DecodeSm2Response(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildSm2Request(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.Sm2Doer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("swagger", "sm2", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// Sm3 returns an endpoint that makes HTTP requests to the swagger service sm3
+// server.
+func (c *Client) Sm3() goa.Endpoint {
+	var (
+		decodeResponse = DecodeSm3Response(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildSm3Request(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.Sm3Doer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("swagger", "sm3", err)
+		}
+		return decodeResponse(resp)
 	}
 }

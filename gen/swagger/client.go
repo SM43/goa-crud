@@ -8,14 +8,53 @@
 package swagger
 
 import (
+	"context"
+
 	goa "goa.design/goa/v3/pkg"
 )
 
 // Client is the "swagger" service client.
 type Client struct {
+	Sm1Endpoint goa.Endpoint
+	Sm2Endpoint goa.Endpoint
+	Sm3Endpoint goa.Endpoint
 }
 
 // NewClient initializes a "swagger" service client given the endpoints.
-func NewClient(goa.Endpoint) *Client {
-	return &Client{}
+func NewClient(sm1, sm2, sm3 goa.Endpoint) *Client {
+	return &Client{
+		Sm1Endpoint: sm1,
+		Sm2Endpoint: sm2,
+		Sm3Endpoint: sm3,
+	}
+}
+
+// Sm1 calls the "sm1" endpoint of the "swagger" service.
+func (c *Client) Sm1(ctx context.Context) (res *Resource, err error) {
+	var ires interface{}
+	ires, err = c.Sm1Endpoint(ctx, nil)
+	if err != nil {
+		return
+	}
+	return ires.(*Resource), nil
+}
+
+// Sm2 calls the "sm2" endpoint of the "swagger" service.
+func (c *Client) Sm2(ctx context.Context) (res *Resource, err error) {
+	var ires interface{}
+	ires, err = c.Sm2Endpoint(ctx, nil)
+	if err != nil {
+		return
+	}
+	return ires.(*Resource), nil
+}
+
+// Sm3 calls the "sm3" endpoint of the "swagger" service.
+func (c *Client) Sm3(ctx context.Context) (res *Resource, err error) {
+	var ires interface{}
+	ires, err = c.Sm3Endpoint(ctx, nil)
+	if err != nil {
+		return
+	}
+	return ires.(*Resource), nil
 }

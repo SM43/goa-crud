@@ -8,18 +8,69 @@
 package swagger
 
 import (
+	"context"
+
 	goa "goa.design/goa/v3/pkg"
 )
 
 // Endpoints wraps the "swagger" service endpoints.
 type Endpoints struct {
+	Sm1 goa.Endpoint
+	Sm2 goa.Endpoint
+	Sm3 goa.Endpoint
 }
 
 // NewEndpoints wraps the methods of the "swagger" service with endpoints.
 func NewEndpoints(s Service) *Endpoints {
-	return &Endpoints{}
+	return &Endpoints{
+		Sm1: NewSm1Endpoint(s),
+		Sm2: NewSm2Endpoint(s),
+		Sm3: NewSm3Endpoint(s),
+	}
 }
 
 // Use applies the given middleware to all the "swagger" service endpoints.
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
+	e.Sm1 = m(e.Sm1)
+	e.Sm2 = m(e.Sm2)
+	e.Sm3 = m(e.Sm3)
+}
+
+// NewSm1Endpoint returns an endpoint function that calls the method "sm1" of
+// service "swagger".
+func NewSm1Endpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		res, err := s.Sm1(ctx)
+		if err != nil {
+			return nil, err
+		}
+		vres := NewViewedResource(res, "default")
+		return vres, nil
+	}
+}
+
+// NewSm2Endpoint returns an endpoint function that calls the method "sm2" of
+// service "swagger".
+func NewSm2Endpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		res, err := s.Sm2(ctx)
+		if err != nil {
+			return nil, err
+		}
+		vres := NewViewedResource(res, "default")
+		return vres, nil
+	}
+}
+
+// NewSm3Endpoint returns an endpoint function that calls the method "sm3" of
+// service "swagger".
+func NewSm3Endpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		res, err := s.Sm3(ctx)
+		if err != nil {
+			return nil, err
+		}
+		vres := NewViewedResource(res, "default")
+		return vres, nil
+	}
 }

@@ -14,12 +14,16 @@ import (
 
 	swagger "github.com/sm43/goa-crud/gen/swagger"
 	goahttp "goa.design/goa/v3/http"
+	goa "goa.design/goa/v3/pkg"
 	"goa.design/plugins/v3/cors"
 )
 
 // Server lists the swagger service endpoint HTTP handlers.
 type Server struct {
 	Mounts []*MountPoint
+	Sm1    http.Handler
+	Sm2    http.Handler
+	Sm3    http.Handler
 	CORS   http.Handler
 }
 
@@ -56,9 +60,16 @@ func New(
 ) *Server {
 	return &Server{
 		Mounts: []*MountPoint{
-			{"CORS", "OPTIONS", "/swagger/swagger.json"},
-			{"gen/http/openapi.json", "GET", "/swagger/swagger.json"},
+			{"Sm1", "POST", "/sma"},
+			{"Sm2", "POST", "/smb"},
+			{"Sm3", "POST", "/smc"},
+			{"CORS", "OPTIONS", "/sma"},
+			{"CORS", "OPTIONS", "/smb"},
+			{"CORS", "OPTIONS", "/smc"},
 		},
+		Sm1:  NewSm1Handler(e.Sm1, mux, decoder, encoder, errhandler, formatter),
+		Sm2:  NewSm2Handler(e.Sm2, mux, decoder, encoder, errhandler, formatter),
+		Sm3:  NewSm3Handler(e.Sm3, mux, decoder, encoder, errhandler, formatter),
 		CORS: NewCORSHandler(),
 	}
 }
@@ -68,21 +79,150 @@ func (s *Server) Service() string { return "swagger" }
 
 // Use wraps the server handlers with the given middleware.
 func (s *Server) Use(m func(http.Handler) http.Handler) {
+	s.Sm1 = m(s.Sm1)
+	s.Sm2 = m(s.Sm2)
+	s.Sm3 = m(s.Sm3)
 	s.CORS = m(s.CORS)
 }
 
 // Mount configures the mux to serve the swagger endpoints.
 func Mount(mux goahttp.Muxer, h *Server) {
+	MountSm1Handler(mux, h.Sm1)
+	MountSm2Handler(mux, h.Sm2)
+	MountSm3Handler(mux, h.Sm3)
 	MountCORSHandler(mux, h.CORS)
-	MountGenHTTPOpenapiJSON(mux, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "gen/http/openapi.json")
-	}))
 }
 
-// MountGenHTTPOpenapiJSON configures the mux to serve GET request made to
-// "/swagger/swagger.json".
-func MountGenHTTPOpenapiJSON(mux goahttp.Muxer, h http.Handler) {
-	mux.Handle("GET", "/swagger/swagger.json", handleSwaggerOrigin(h).ServeHTTP)
+// MountSm1Handler configures the mux to serve the "swagger" service "sm1"
+// endpoint.
+func MountSm1Handler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := handleSwaggerOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/sma", f)
+}
+
+// NewSm1Handler creates a HTTP handler which loads the HTTP request and calls
+// the "swagger" service "sm1" endpoint.
+func NewSm1Handler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		encodeResponse = EncodeSm1Response(encoder)
+		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "sm1")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "swagger")
+		var err error
+		res, err := endpoint(ctx, nil)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountSm2Handler configures the mux to serve the "swagger" service "sm2"
+// endpoint.
+func MountSm2Handler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := handleSwaggerOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/smb", f)
+}
+
+// NewSm2Handler creates a HTTP handler which loads the HTTP request and calls
+// the "swagger" service "sm2" endpoint.
+func NewSm2Handler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		encodeResponse = EncodeSm2Response(encoder)
+		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "sm2")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "swagger")
+		var err error
+		res, err := endpoint(ctx, nil)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountSm3Handler configures the mux to serve the "swagger" service "sm3"
+// endpoint.
+func MountSm3Handler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := handleSwaggerOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/smc", f)
+}
+
+// NewSm3Handler creates a HTTP handler which loads the HTTP request and calls
+// the "swagger" service "sm3" endpoint.
+func NewSm3Handler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		encodeResponse = EncodeSm3Response(encoder)
+		encodeError    = goahttp.ErrorEncoder(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "sm3")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "swagger")
+		var err error
+		res, err := endpoint(ctx, nil)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
 }
 
 // MountCORSHandler configures the mux to serve the CORS endpoints for the
@@ -95,7 +235,9 @@ func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("OPTIONS", "/swagger/swagger.json", f)
+	mux.Handle("OPTIONS", "/sma", f)
+	mux.Handle("OPTIONS", "/smb", f)
+	mux.Handle("OPTIONS", "/smc", f)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.

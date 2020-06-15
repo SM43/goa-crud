@@ -6,3 +6,85 @@
 // $ goa gen github.com/sm43/goa-crud/design
 
 package client
+
+import (
+	swaggerviews "github.com/sm43/goa-crud/gen/swagger/views"
+)
+
+// Sm1ResponseBody is the type of the "swagger" service "sm1" endpoint HTTP
+// response body.
+type Sm1ResponseBody struct {
+	// ID is the unique id of the resource
+	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Name of the resource
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// Type of resource
+	Type *string `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	// Rating of resource
+	Rating *uint `form:"rating,omitempty" json:"rating,omitempty" xml:"rating,omitempty"`
+}
+
+// Sm2ResponseBody is the type of the "swagger" service "sm2" endpoint HTTP
+// response body.
+type Sm2ResponseBody struct {
+	// ID is the unique id of the resource
+	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Name of the resource
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// Type of resource
+	Type *string `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	// Rating of resource
+	Rating *uint `form:"rating,omitempty" json:"rating,omitempty" xml:"rating,omitempty"`
+}
+
+// Sm3ResponseBody is the type of the "swagger" service "sm3" endpoint HTTP
+// response body.
+type Sm3ResponseBody struct {
+	// ID is the unique id of the resource
+	ID *uint `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Name of the resource
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// Type of resource
+	Type *string `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	// Rating of resource
+	Rating *uint `form:"rating,omitempty" json:"rating,omitempty" xml:"rating,omitempty"`
+}
+
+// NewSm1ResourceCreated builds a "swagger" service "sm1" endpoint result from
+// a HTTP "Created" response.
+func NewSm1ResourceCreated(body *Sm1ResponseBody) *swaggerviews.ResourceView {
+	v := &swaggerviews.ResourceView{
+		ID:     body.ID,
+		Name:   body.Name,
+		Type:   body.Type,
+		Rating: body.Rating,
+	}
+
+	return v
+}
+
+// NewSm2ResourceCreated builds a "swagger" service "sm2" endpoint result from
+// a HTTP "Created" response.
+func NewSm2ResourceCreated(body *Sm2ResponseBody) *swaggerviews.ResourceView {
+	v := &swaggerviews.ResourceView{
+		ID:     body.ID,
+		Name:   body.Name,
+		Type:   body.Type,
+		Rating: body.Rating,
+	}
+
+	return v
+}
+
+// NewSm3ResourceCreated builds a "swagger" service "sm3" endpoint result from
+// a HTTP "Created" response.
+func NewSm3ResourceCreated(body *Sm3ResponseBody) *swaggerviews.ResourceView {
+	v := &swaggerviews.ResourceView{
+		ID:     body.ID,
+		Name:   body.Name,
+		Type:   body.Type,
+		Rating: body.Rating,
+	}
+
+	return v
+}
